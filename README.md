@@ -1,33 +1,16 @@
-# SkillSwap (Team BAAMM)
+# React + Vite
 
-A social skill-sharing platform where users can learn new skills and teach others using a time-credit system. Instead of exchanging money or relying on a direct one-to-one skill trade, users earn credits by teaching someone and can spend those credits to learn from any other user on the platform.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-**Team:** BAAMM  
-**Institution:** Texas A&M University–San Antonio  
-**Project Management:** Jira
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Problem
+## React Compiler
 
-People have valuable skills to share, but there's no easy way to trade them fairly — without paying for lessons or needing a perfect one-to-one skill swap.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Solution
+## Expanding the ESLint configuration
 
-A web app where users earn time credits by teaching skills, then spend those credits to learn different skills from anyone else on the platform.
-
-## Impact
-
-Saves people money and opens up alternate, fairer ways of "paying" for knowledge and mentorship within the community.
-
----
-
-## Team Formation & Roles
-
-| Team Member | Role | Description |
-|-------------|------|-------------|
-| **Augustine Perez** | Team Lead — Requests & Exchanges | Sending requests, accepting/declining, tracking exchange status, marking exchanges complete. Secondary: architecture/planning. |
-| **Ben Fierros** | Skill Discovery & Search | Browsing, search, filtering, and related frontend flow. Secondary: keeps reusable frontend components consistent. |
-| **Amber Parker** | Authentication & Accounts | Login, signup, password/account settings, session flow. Secondary: sets up Jira and keeps the board organized. |
-| **Mario Rodriguez** | Dashboard & Notifications | Main dashboard, activity feed/notifications, navigation flow. Secondary: UI/UX visuals and deployment. |
-| **Mallory Sorola** | Profiles & Skill Management | Profile creation/editing, adding/removing skills, displaying user info. Secondary: front-to-back integration, UX/accessibility. |
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
