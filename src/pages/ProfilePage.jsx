@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 function ProfilePage() {
+  // Saved profile information currently displayed to the user
   const [profile, setProfile] = useState({
     displayName: 'Mallory Sorola',
     username: 'mallorysorola',
@@ -9,7 +10,29 @@ function ProfilePage() {
     skills: ['Web Development', 'Python'],
   })
 
+  // Temporary copy used while the user edits their profile
+  const [editProfile, setEditProfile] = useState(profile)
+
+  // Controls whether the page is in view mode or edit mode
   const [isEditing, setIsEditing] = useState(false)
+
+  // Opens edit mode and copies the current saved profile
+  const handleEdit = () => {
+    setEditProfile(profile)
+    setIsEditing(true)
+  }
+
+  // Saves the temporary edits to the main profile
+  const handleSave = () => {
+    setProfile(editProfile)
+    setIsEditing(false)
+  }
+
+  // Discards any unsaved changes
+  const handleCancel = () => {
+    setEditProfile(profile)
+    setIsEditing(false)
+  }
 
   return (
     <main>
@@ -21,10 +44,10 @@ function ProfilePage() {
             Display Name:
             <input
               type="text"
-              value={profile.displayName}
+              value={editProfile.displayName}
               onChange={(event) =>
-                setProfile({
-                  ...profile,
+                setEditProfile({
+                  ...editProfile,
                   displayName: event.target.value,
                 })
               }
@@ -37,10 +60,10 @@ function ProfilePage() {
             Username:
             <input
               type="text"
-              value={profile.username}
+              value={editProfile.username}
               onChange={(event) =>
-                setProfile({
-                  ...profile,
+                setEditProfile({
+                  ...editProfile,
                   username: event.target.value,
                 })
               }
@@ -52,10 +75,10 @@ function ProfilePage() {
           <label>
             Bio:
             <textarea
-              value={profile.bio}
+              value={editProfile.bio}
               onChange={(event) =>
-                setProfile({
-                  ...profile,
+                setEditProfile({
+                  ...editProfile,
                   bio: event.target.value,
                 })
               }
@@ -68,10 +91,10 @@ function ProfilePage() {
             Location:
             <input
               type="text"
-              value={profile.location}
+              value={editProfile.location}
               onChange={(event) =>
-                setProfile({
-                  ...profile,
+                setEditProfile({
+                  ...editProfile,
                   location: event.target.value,
                 })
               }
@@ -80,8 +103,12 @@ function ProfilePage() {
 
           <br />
 
-          <button onClick={() => setIsEditing(false)}>
+          <button onClick={handleSave}>
             Save Profile
+          </button>
+
+          <button onClick={handleCancel}>
+            Cancel
           </button>
         </div>
       ) : (
@@ -102,7 +129,7 @@ function ProfilePage() {
             <strong>Location:</strong> {profile.location}
           </p>
 
-          <button onClick={() => setIsEditing(true)}>
+          <button onClick={handleEdit}>
             Edit Profile
           </button>
         </div>
