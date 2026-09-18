@@ -40,15 +40,22 @@ function SkillManagementPage() {
         category: '',
         listingType: 'Teaching',
     })
+    // Stores validation errors for adding a skill
+    const [addError, setAddError] = useState('')
 
+    // Stores validation errors for editing a skill
+    const [editError, setEditError] = useState('')
     // Adds a new skill to the user's skill list
     const handleAddSkill = () => {
         const title = newSkill.title.trim()
         const description = newSkill.description.trim()
         const category = newSkill.category.trim()
 
-        // Require the main skill fields before saving
-        if (!title || !description || !category) {
+        // Check required fields
+        if (!title || !description || !category || !newSkill.listingType) {
+            setAddError(
+                'Title, description, category, and listing type are required.'
+            )
             return
         }
 
@@ -60,10 +67,9 @@ function SkillManagementPage() {
             category,
         }
 
-        // Add the new skill to the existing list
         setSkills([...skills, skillToAdd])
 
-        // Clear the form after saving
+        // Reset the form after saving
         setNewSkill({
             title: '',
             description: '',
@@ -71,12 +77,13 @@ function SkillManagementPage() {
             listingType: 'Teaching',
         })
 
-        // Close the add-skill form
+        setAddError('')
         setShowAddForm(false)
     }
     // Opens the selected skill in edit mode
     const handleEditSkill = (skill) => {
         setEditingSkillId(skill.id)
+        setEditError('')
 
         setEditSkill({
             title: skill.title,
@@ -86,20 +93,34 @@ function SkillManagementPage() {
         })
     }
     // Saves changes to the selected skill
+    // Saves changes to the selected skill
     const handleSaveEdit = () => {
+        const title = editSkill.title.trim()
+        const description = editSkill.description.trim()
+        const category = editSkill.category.trim()
+
+        // Check required fields
+        if (!title || !description || !category || !editSkill.listingType) {
+            setEditError(
+                'Title, description, category, and listing type are required.'
+            )
+            return
+        }
+
         const updatedSkills = skills.map((skill) =>
             skill.id === editingSkillId
                 ? {
                     ...skill,
-                    title: editSkill.title.trim(),
-                    description: editSkill.description.trim(),
-                    category: editSkill.category.trim(),
+                    title,
+                    description,
+                    category,
                     listingType: editSkill.listingType,
                 }
                 : skill
         )
 
         setSkills(updatedSkills)
+        setEditError('')
         setEditingSkillId(null)
     }
     // Removes a skill from the user's skill list
@@ -189,7 +210,8 @@ function SkillManagementPage() {
                     </label>
 
                     <br />
-
+                    {/* Display validation error for new skills */}
+                    {addError && <p style={{ color: 'red' }}>{addError}</p>}
                     <button
                         type="button"
                         onClick={handleAddSkill}
@@ -199,7 +221,10 @@ function SkillManagementPage() {
 
                     <button
                         type="button"
-                        onClick={() => setShowAddForm(false)}
+                        onClick={() => {
+                            setShowAddForm(false);
+                            setAddError('');
+                        }}
                     >
                         Cancel
                     </button>
@@ -279,7 +304,8 @@ function SkillManagementPage() {
                             </label>
 
                             <br />
-
+                            {editError && <p style={{ color: 'red' }}>{editError}</p>}
+                            {/* Display validation error for editing skills */}
                             <button type="button" onClick={handleSaveEdit}>
                                 Save Changes
                             </button>
