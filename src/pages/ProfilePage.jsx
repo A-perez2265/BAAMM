@@ -16,22 +16,47 @@ function ProfilePage() {
   // Controls whether the page is in view mode or edit mode
   const [isEditing, setIsEditing] = useState(false)
 
+  const [error, setError] = useState('')
+
   // Opens edit mode and copies the current saved profile
   const handleEdit = () => {
     setEditProfile(profile)
+    setError('')
     setIsEditing(true)
   }
 
   // Saves the temporary edits to the main profile
   const handleSave = () => {
-    setProfile(editProfile)
+    // Remove extra spaces before validating
+    const displayName = editProfile.displayName.trim()
+    const username = editProfile.username.trim()
+    const location = editProfile.location.trim()
+    // Check required fields
+    if (!displayName || !username || !location) {
+        setError('Display name, username, and location are required.')
+        return
+    }
+    // Usernames should not contain spaces
+    if (username.includes(' ')) {
+        setError('Username cannot contain spaces.')
+        return
+    }
+    // Save cleaned profile information
+    setProfile({
+        ...editProfile,
+        displayName,
+        username,
+        location,
+    })
+    setError('')
     setIsEditing(false)
-  }
+}
 
   // Discards any unsaved changes
   const handleCancel = () => {
     setEditProfile(profile)
     setIsEditing(false)
+    setError('')
   }
 
   return (
@@ -103,6 +128,10 @@ function ProfilePage() {
 
           <br />
 
+          {/* Display error message if there is an error*/}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+
+          {/* // Buttons to save or cancel edits */}
           <button onClick={handleSave}>
             Save Profile
           </button>
