@@ -29,6 +29,18 @@ function SkillManagementPage() {
         category: '',
         listingType: 'Teaching',
     })
+
+    // Tracks which skill is currently being edited
+    const [editingSkillId, setEditingSkillId] = useState(null)
+
+    // Stores temporary values while editing
+    const [editSkill, setEditSkill] = useState({
+        title: '',
+        description: '',
+        category: '',
+        listingType: 'Teaching',
+    })
+
     // Adds a new skill to the user's skill list
     const handleAddSkill = () => {
         const title = newSkill.title.trim()
@@ -61,6 +73,42 @@ function SkillManagementPage() {
 
         // Close the add-skill form
         setShowAddForm(false)
+    }
+    // Opens the selected skill in edit mode
+    const handleEditSkill = (skill) => {
+        setEditingSkillId(skill.id)
+
+        setEditSkill({
+            title: skill.title,
+            description: skill.description,
+            category: skill.category,
+            listingType: skill.listingType,
+        })
+    }
+    // Saves changes to the selected skill
+    const handleSaveEdit = () => {
+        const updatedSkills = skills.map((skill) =>
+            skill.id === editingSkillId
+                ? {
+                    ...skill,
+                    title: editSkill.title.trim(),
+                    description: editSkill.description.trim(),
+                    category: editSkill.category.trim(),
+                    listingType: editSkill.listingType,
+                }
+                : skill
+        )
+
+        setSkills(updatedSkills)
+        setEditingSkillId(null)
+    }
+    // Removes a skill from the user's skill list
+    const handleRemoveSkill = (skillId) => {
+        const updatedSkills = skills.filter(
+            (skill) => skill.id !== skillId
+        )
+
+        setSkills(updatedSkills)
     }
 
     return (
@@ -163,27 +211,114 @@ function SkillManagementPage() {
 
             {skills.map((skill) => (
                 <div key={skill.id}>
-                    <h3>{skill.title}</h3>
+                    {editingSkillId === skill.id ? (
+                        <div>
+                            <h3>Edit Skill</h3>
 
-                    <p>
-                        <strong>Description:</strong> {skill.description}
-                    </p>
+                            <label>
+                                Skill Title:
+                                <input
+                                    type="text"
+                                    value={editSkill.title}
+                                    onChange={(event) =>
+                                        setEditSkill({
+                                            ...editSkill,
+                                            title: event.target.value,
+                                        })
+                                    }
+                                />
+                            </label>
 
-                    <p>
-                        <strong>Category:</strong> {skill.category}
-                    </p>
+                            <br />
 
-                    <p>
-                        <strong>Listing Type:</strong> {skill.listingType}
-                    </p>
+                            <label>
+                                Description:
+                                <textarea
+                                    value={editSkill.description}
+                                    onChange={(event) =>
+                                        setEditSkill({
+                                            ...editSkill,
+                                            description: event.target.value,
+                                        })
+                                    }
+                                />
+                            </label>
 
-                    <button type="button">
-                        Edit
-                    </button>
+                            <br />
 
-                    <button type="button">
-                        Remove
-                    </button>
+                            <label>
+                                Category:
+                                <input
+                                    type="text"
+                                    value={editSkill.category}
+                                    onChange={(event) =>
+                                        setEditSkill({
+                                            ...editSkill,
+                                            category: event.target.value,
+                                        })
+                                    }
+                                />
+                            </label>
+
+                            <br />
+
+                            <label>
+                                Listing Type:
+                                <select
+                                    value={editSkill.listingType}
+                                    onChange={(event) =>
+                                        setEditSkill({
+                                            ...editSkill,
+                                            listingType: event.target.value,
+                                        })
+                                    }
+                                >
+                                    <option value="Teaching">Teaching</option>
+                                    <option value="Learning">Learning</option>
+                                </select>
+                            </label>
+
+                            <br />
+
+                            <button type="button" onClick={handleSaveEdit}>
+                                Save Changes
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setEditingSkillId(null)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <div>
+                            <h3>{skill.title}</h3>
+
+                            <p>
+                                <strong>Description:</strong> {skill.description}
+                            </p>
+
+                            <p>
+                                <strong>Category:</strong> {skill.category}
+                            </p>
+
+                            <p>
+                                <strong>Listing Type:</strong> {skill.listingType}
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={() => handleEditSkill(skill)}
+                            >
+                                Edit
+                            </button>
+
+                            <button type="button" onClick={() => handleRemoveSkill(skill.id)}>
+                                Remove
+                            </button>
+                        </div>
+                    )}
                 </div>
             ))}
         </main>
