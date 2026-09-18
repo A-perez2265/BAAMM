@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../services/supabase'
 
 function ProfilePage() {
   // Saved profile information currently displayed to the user
@@ -16,7 +17,25 @@ function ProfilePage() {
   // Controls whether the page is in view mode or edit mode
   const [isEditing, setIsEditing] = useState(false)
 
+  // Stores profile validation errors
   const [error, setError] = useState('')
+
+  // Temporary test to verify the React app can reach Supabase
+  useEffect(() => {
+    const testConnection = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+
+      if (error) {
+        console.error('Supabase connection error:', error)
+      } else {
+        console.log('Supabase profiles data:', data)
+      }
+    }
+
+    testConnection()
+  }, [])
 
   // Opens edit mode and copies the current saved profile
   const handleEdit = () => {
@@ -27,36 +46,36 @@ function ProfilePage() {
 
   // Saves the temporary edits to the main profile
   const handleSave = () => {
-    // Remove extra spaces before validating
     const displayName = editProfile.displayName.trim()
     const username = editProfile.username.trim()
     const location = editProfile.location.trim()
-    // Check required fields
+
     if (!displayName || !username || !location) {
-        setError('Display name, username, and location are required.')
-        return
+      setError('Display name, username, and location are required.')
+      return
     }
-    // Usernames should not contain spaces
+
     if (username.includes(' ')) {
-        setError('Username cannot contain spaces.')
-        return
+      setError('Username cannot contain spaces.')
+      return
     }
-    // Save cleaned profile information
+
     setProfile({
-        ...editProfile,
-        displayName,
-        username,
-        location,
+      ...editProfile,
+      displayName,
+      username,
+      location,
     })
+
     setError('')
     setIsEditing(false)
-}
+  }
 
   // Discards any unsaved changes
   const handleCancel = () => {
     setEditProfile(profile)
-    setIsEditing(false)
     setError('')
+    setIsEditing(false)
   }
 
   return (
