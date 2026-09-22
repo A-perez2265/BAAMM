@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../services/supabase'
+import { supabase } from '../utils/supabaseClient'
 
 function ProfilePage() {
   // Saved profile information currently displayed to the user
