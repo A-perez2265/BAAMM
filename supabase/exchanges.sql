@@ -1,12 +1,7 @@
--- Exchange Engine: one row = one skill-swap request.
--- Run this in the Supabase SQL editor when the team is ready.
--- RLS is turned on, but policies are Amber's job — do not add them here.
-
 create table if not exists public.exchanges (
   id uuid primary key default gen_random_uuid(),
   learner_id uuid not null references auth.users (id),
   teacher_id uuid not null references auth.users (id),
-  -- No foreign key yet: Mallory's skills table is not the source of truth in code yet.
   skill_id uuid,
   message text not null default '',
   status text not null default 'pending'
