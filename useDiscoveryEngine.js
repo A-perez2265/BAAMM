@@ -1,20 +1,13 @@
 import { useState, useMemo } from 'react';
+import {
+  initialDiscoveryState,
+  clearQuery as clearQueryState,
+  resetFilters,
+} from './useDiscoveryState';
 
 export function useDiscoveryEngine({ initialListings = [], currentUser = null }) {
-  //  Central State Object / Memory Box for Search & Filter Parameters
-  const [searchState, setSearchState] = useState({
-    mode: 'learner', // 'learner' (wants to learn) | 'teacher' (wants to teach)
-    query: '',
-    selectedTagId: null,
-    barterOnly: false,
-    category: 'all',
-    experienceLevel: 'all',
-    modality: 'all', // 'all' | 'Remote' | 'In-Person'
-    language: 'all',
-    maxDistance: 25,
-    sortBy: 'relevance', // 'relevance' | 'rating' | 'trades' | 'distance'
-    viewMode: 'grid', // 'grid' | 'list'
-  });
+  // Central State Object / Memory Box for Search & Filter Parameters
+  const [searchState, setSearchState] = useState(initialDiscoveryState);
 
   // State update handlers "Remote Controllers" for the searchState object
   const updateFilter = (key, value) => {
@@ -26,20 +19,11 @@ export function useDiscoveryEngine({ initialListings = [], currentUser = null })
   };
 
   const clearQuery = () => {
-    setSearchState((prev) => ({ ...prev, query: '', selectedTagId: null }));
+    setSearchState(clearQueryState);
   };
 
   const resetAllFilters = () => {
-    setSearchState((prev) => ({
-      ...prev,
-      barterOnly: false,
-      category: 'all',
-      experienceLevel: 'all',
-      modality: 'all',
-      language: 'all',
-      maxDistance: 25,
-      // Retains user's query, mode, sortBy, and viewMode
-    }));
+    setSearchState(resetFilters);
   };
 
   // 2. Client-Side Filtering & Sorting Pipeline
