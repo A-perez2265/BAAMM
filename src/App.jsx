@@ -1,7 +1,7 @@
-import ProfilePage from './pages/ProfilePage'
+import SkillManagementPage from './pages/SkillManagementPage'
 
 function App() {
-  return <ProfilePage />
+  return <SkillManagementPage />
 }
 
 export default App
