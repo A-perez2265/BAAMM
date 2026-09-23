@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../utils/supabaseClient'
 
 // Retrieves all skills belonging to a specific user
 export async function getSkills(userId) {
