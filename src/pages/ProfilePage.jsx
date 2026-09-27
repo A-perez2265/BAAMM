@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import { getSkills } from '../services/skillService'
 
 function ProfilePage() {
   // Saved profile information currently displayed to the user
   const [profile, setProfile] = useState({
-    displayName: 'Mallory Sorola',
-    username: 'mallorysorola',
-    bio: 'Computer Science student',
-    location: 'San Antonio, TX',
-    skills: ['Web Development', 'Python'],
+    displayName: '',
+    username: '',
+    bio: '',
+    location: '',
   })
+  // Stores skills belonging to the signed-in user
+  const [skills, setSkills] = useState([])
 
   // Temporary copy used while the user edits their profile
   const [editProfile, setEditProfile] = useState(profile)
@@ -20,22 +22,74 @@ function ProfilePage() {
   // Stores profile validation errors
   const [error, setError] = useState('')
 
-  // Temporary test to verify the React app can reach Supabase
+  // Stores the ID of the currently signed-in user
+  const [userId, setUserId] = useState(null)
+
+
+  // Gets the currently signed-in user
   useEffect(() => {
-    const testConnection = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
+    const loadUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser()
 
       if (error) {
-        console.error('Supabase connection error:', error)
-      } else {
-        console.log('Supabase profiles data:', data)
+        console.error('Error loading user:', error)
+        return
+      }
+
+      if (user) {
+        setUserId(user.id)
       }
     }
 
-    testConnection()
+    loadUser()
   }, [])
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!userId) {
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error loading profile:', error)
+        return
+      }
+
+      setProfile({
+        displayName: data.display_name || '',
+        username: data.username || '',
+        bio: data.bio || '',
+        location: data.location || '',
+      })
+    }
+
+    loadProfile()
+  }, [userId])
+  // Loads skills belonging to the signed-in user
+  useEffect(() => {
+    const loadSkills = async () => {
+      if (!userId) {
+        return
+      }
+
+      try {
+        const skillData = await getSkills(userId)
+        setSkills(skillData)
+      } catch (error) {
+        console.error('Error loading user skills:', error)
+      }
+    }
+
+    loadSkills()
+  }, [userId])
 
   // Opens edit mode and copies the current saved profile
   const handleEdit = () => {
@@ -185,11 +239,17 @@ function ProfilePage() {
 
       <h2>Skills</h2>
 
-      <ul>
-        {profile.skills.map((skill) => (
-          <li key={skill}>{skill}</li>
-        ))}
-      </ul>
+      {skills.length === 0 ? (
+        <p>No skills added yet.</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {skills.map((skill) => (
+            <li key={skill.id}>
+              {skill.title}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }
