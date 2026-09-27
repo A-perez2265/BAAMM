@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../utils/supabaseClient'
+import SkillForm from '../components/skills/SkillForm'
 import {
     isValidGeneralLocation,
     formatGeneralLocation,
-    capitalizeWords,
-    capitalizeFirstLetter,
-    formatTags,
     createEmptySkill,
     formatSkillFromDatabase,
 } from '../utils/skillUtils'
-import {
-    CATEGORIES,
-    EXPERIENCE_LEVELS,
-    FORMATS,
-    LANGUAGES,
-    LISTING_TYPES,
-} from '../constants/skillOptions'
 
 import {
     getSkills,
@@ -248,227 +239,19 @@ function SkillManagementPage() {
                 <div>
                     <h2>Add New Skill</h2>
 
-                    <label>
-                        Skill Title:
-                        <input
-                            type="text"
-                            value={newSkill.title}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    title: event.target.value,
-                                })
-                            }
-                            onBlur={() =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    title: capitalizeWords(newSkill.title),
-                                })
-                            }
-                        />
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Description:
-                        <textarea
-                            value={newSkill.description}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    description: event.target.value,
-                                })
-                            }
-                            onBlur={() =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    description: capitalizeFirstLetter(newSkill.description),
-                                })
-                            }
-                        />
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Category:
-                        <select
-                            value={newSkill.category}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    category: event.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select a category</option>
-
-                            {CATEGORIES.map((category) => (
-                                <option key={category} value={category}>
-                                    {category}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Tags:
-                        <input
-                            type="text"
-                            value={newSkill.tags}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    tags: event.target.value,
-                                })
-                            }
-                            onBlur={() =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    tags: formatTags(newSkill.tags),
-                                })
-                            }
-                        />
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Experience Level:
-                        <select
-                            value={newSkill.experienceLevel}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    experienceLevel: event.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select an experience level</option>
-                            {EXPERIENCE_LEVELS.map((level) => (
-                                <option key={level} value={level}>
-                                    {level}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Format:
-                        <select
-                            value={newSkill.format}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    format: event.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select a format</option>
-                            {FORMATS.map((format) => (
-                                <option key={format} value={format}>
-                                    {format}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Language:
-                        <select
-                            value={newSkill.language}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    language: event.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select a language</option>
-
-                            {LANGUAGES.map((language) => (
-                                <option key={language} value={language}>
-                                    {language}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Location:
-                        <input
-                            type="text"
-                            value={newSkill.location}
-                            placeholder="City, State/Region"
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    location: event.target.value,
-                                })
-                            }
-
-                            onBlur={() =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    location: formatGeneralLocation(newSkill.location),
-                                })
-                            }
-                        />
-                    </label>
-
-                    <br />
-
-                    <label>
-                        Listing Type:
-                        <select
-                            value={newSkill.listingType}
-                            onChange={(event) =>
-                                setNewSkill({
-                                    ...newSkill,
-                                    listingType: event.target.value,
-                                })
-                            }
-                        >
-                            <option value="">Select a listing type</option>
-                            {LISTING_TYPES.map((type) => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <br />
-                    {/* Display validation error for new skills */}
-                    {addError && <p style={{ color: 'red' }}>{addError}</p>}
-                    <button
-                        type="button"
-                        onClick={handleAddSkill}
-                    >
-                        Save Skill
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setShowAddForm(false);
-                            setAddError('');
+                    <SkillForm
+                        skill={newSkill}
+                        setSkill={setNewSkill}
+                        error={addError}
+                        onSubmit={handleAddSkill}
+                        onCancel={() => {
+                            setShowAddForm(false)
+                            setAddError('')
                         }}
-                    >
-                        Cancel
-                    </button>
+                        submitLabel="Save Skill"
+                    />
                 </div>
             )}
-
 
             <h2>Skill Portfolio</h2>
 
@@ -477,215 +260,19 @@ function SkillManagementPage() {
                     {editingSkillId === skill.id ? (
                         <div>
                             <h3>Edit Skill</h3>
+                            <SkillForm
+                                skill={editSkill}
+                                setSkill={setEditSkill}
+                                error={editError}
+                                onSubmit={handleSaveEdit}
+                                onCancel={() => {
+                                    setEditingSkillId(null)
+                                    setEditError('')
+                                }}
+                                submitLabel="Save Changes"
+                            />
 
-                            <label>
-                                Skill Title:
-                                <input
-                                    type="text"
-                                    value={editSkill.title}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            title: event.target.value,
-                                        })
-                                    }
-                                    onBlur={() =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            title: capitalizeWords(editSkill.title),
-                                        })
-                                    }
-                                />
-                            </label>
 
-                            <br />
-
-                            <label>
-                                Description:
-                                <textarea
-                                    value={editSkill.description}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            description: event.target.value,
-                                        })
-                                    }
-                                    onBlur={() =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            description: capitalizeFirstLetter(editSkill.description),
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Category:
-                                <select
-                                    value={editSkill.category}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            category: event.target.value,
-                                        })
-                                    }
-                                >
-                                    <option value="">Select a category</option>
-
-                                    {CATEGORIES.map((category) => (
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Tags:
-                                <input
-                                    type="text"
-                                    value={editSkill.tags}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            tags: event.target.value,
-                                        })
-                                    }
-                                    onBlur={() =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            tags: formatTags(editSkill.tags),
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Experience Level:
-                                <select
-                                    value={editSkill.experienceLevel}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            experienceLevel: event.target.value,
-                                        })
-                                    }
-                                >
-                                    {EXPERIENCE_LEVELS.map((level) => (
-                                        <option key={level} value={level}>
-                                            {level}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Format:
-                                <select
-                                    value={editSkill.format}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            format: event.target.value,
-                                        })
-                                    }
-                                >
-                                    {FORMATS.map((format) => (
-                                        <option key={format} value={format}>
-                                            {format}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Language:
-                                <select
-                                    value={editSkill.language}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            language: event.target.value,
-                                        })
-                                    }
-                                >
-                                    <option value="">Select a language</option>
-
-                                    {LANGUAGES.map((language) => (
-                                        <option key={language} value={language}>
-                                            {language}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Location:
-                                <input
-                                    type="text"
-                                    value={editSkill.location}
-                                    placeholder="City, State/Region"
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            location: event.target.value,
-                                        })
-                                    }
-                                    onBlur={() =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            location: formatGeneralLocation(editSkill.location),
-                                        })
-                                    }
-                                />
-                            </label>
-
-                            <br />
-
-                            <label>
-                                Listing Type:
-                                <select
-                                    value={editSkill.listingType}
-                                    onChange={(event) =>
-                                        setEditSkill({
-                                            ...editSkill,
-                                            listingType: event.target.value,
-                                        })
-                                    }
-                                >
-                                    {LISTING_TYPES.map((type) => (
-                                        <option key={type} value={type}>
-                                            {type}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <br />
-                            {editError && <p style={{ color: 'red' }}>{editError}</p>}
-                            {/* Display validation error for editing skills */}
-                            <button type="button" onClick={handleSaveEdit}>
-                                Save Changes
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setEditingSkillId(null)}
-                            >
-                                Cancel
-                            </button>
                         </div>
                     ) : (
                         <div>
