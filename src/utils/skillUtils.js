@@ -78,3 +78,36 @@ export const formatSkillFromDatabase = (skill) => ({
     experienceLevel: skill.experience_level,
     tags: skill.tags ? skill.tags.join(', ') : '',
 })
+export const prepareSkillForSave = (skill) => ({
+    title: skill.title.trim(),
+    description: skill.description.trim(),
+    category: skill.category.trim(),
+    listingType: skill.listingType.trim(),
+    tags: skill.tags,
+    experienceLevel: skill.experienceLevel.trim(),
+    format: skill.format.trim(),
+    language: skill.language.trim(),
+    location: formatGeneralLocation(skill.location),
+})
+export const validateSkill = (skill) => {
+    if (
+        !skill.title ||
+        !skill.description ||
+        !skill.category ||
+        !skill.experienceLevel ||
+        !skill.listingType ||
+        !skill.format ||
+        !skill.language
+    ) {
+        return 'Title, description, category, experience level, listing type, format, and language are required.'
+    }
+
+    if (
+        skill.location &&
+        !isValidGeneralLocation(skill.location)
+    ) {
+        return 'Please enter a location in City, State/Region format.'
+    }
+
+    return ''
+}

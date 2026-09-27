@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import SkillForm from '../components/skills/SkillForm'
 import {
-    isValidGeneralLocation,
-    formatGeneralLocation,
     createEmptySkill,
     formatSkillFromDatabase,
+    prepareSkillForSave,
+    validateSkill,
 } from '../utils/skillUtils'
 
 import {
@@ -70,30 +70,12 @@ function SkillManagementPage() {
 
     // Adds a new skill to the user's skill list
     const handleAddSkill = async () => {
-        const title = newSkill.title.trim()
-        const description = newSkill.description.trim()
-        const category = newSkill.category.trim()
-        const location = formatGeneralLocation(newSkill.location)
-        !newSkill.experienceLevel || (newSkill.experienceLevel = newSkill.experienceLevel.trim())
+        const preparedSkill = prepareSkillForSave(newSkill)
 
-        // Check required fields
-        // Check required fields
-        if (
-            !title ||
-            !description ||
-            !category ||
-            !newSkill.listingType ||
-            !newSkill.format.trim() ||
-            !newSkill.language.trim()
-        ) {
-            setAddError(
-                'Title, description, category, listing type, format, and language are required.'
-            )
-            return
-        }
+        const validationError = validateSkill(preparedSkill)
 
-        if (location && !isValidGeneralLocation(location)) {
-            setAddError('Please enter a location in City, State/Region format.')
+        if (validationError) {
+            setAddError(validationError)
             return
         }
 
@@ -103,26 +85,13 @@ function SkillManagementPage() {
         }
 
         try {
-            const savedSkill = await addSkill(userId, {
-                title,
-                description,
-                category,
-                listingType: newSkill.listingType,
-                tags: newSkill.tags,
-                experienceLevel: newSkill.experienceLevel,
-                format: newSkill.format,
-                language: newSkill.language,
-                location,
-            })
+            const savedSkill = await addSkill(userId, preparedSkill)
+
+            const formattedSkill = formatSkillFromDatabase(savedSkill)
 
             setSkills([
                 ...skills,
-                {
-                    ...savedSkill,
-                    listingType: savedSkill.listing_type,
-                    experienceLevel: savedSkill.experience_level,
-                    tags: savedSkill.tags ? savedSkill.tags.join(', ') : '',
-                },
+                formattedSkill,
             ])
             setNewSkill(createEmptySkill())
 
@@ -152,47 +121,26 @@ function SkillManagementPage() {
     }
     // Saves changes to the selected skill & added async function to handle saving edits
     const handleSaveEdit = async () => {
-        const title = editSkill.title.trim()
-        const description = editSkill.description.trim()
-        const category = editSkill.category.trim()
-        const location = formatGeneralLocation(editSkill.location)
-        // Check required fields
-        if (
-            !title ||
-            !description ||
-            !category ||
-            !editSkill.listingType ||
-            !editSkill.format.trim() ||
-            !editSkill.language.trim()
-        ) {
-            setEditError(
-                'Title, description, category, listing type, format, and language are required.'
-            )
+        const preparedSkill = prepareSkillForSave(editSkill)
+
+        const validationError = validateSkill(preparedSkill)
+
+        if (validationError) {
+            setEditError(validationError)
             return
         }
 
-        // Make sure we know which signed-in user owns the skill
         if (!userId) {
             setEditError('Unable to identify the signed-in user.')
             return
         }
-        if (location && !isValidGeneralLocation(location)) {
-            setEditError('Please enter a location in City, State/Region format.')
-            return
-        }
 
         try {
-            const savedSkill = await updateSkill(userId, editingSkillId, {
-                title,
-                description,
-                category,
-                listingType: editSkill.listingType,
-                tags: editSkill.tags,
-                experienceLevel: editSkill.experienceLevel,
-                format: editSkill.format,
-                language: editSkill.language,
-                location,
-            })
+            const savedSkill = await updateSkill(
+                userId,
+                editingSkillId,
+                preparedSkill
+            )
 
             const formattedSkill = formatSkillFromDatabase(savedSkill)
             setSkills(
