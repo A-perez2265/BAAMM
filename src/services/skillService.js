@@ -25,6 +25,16 @@ export async function addSkill(userId, skill) {
       description: skill.description.trim(),
       category: skill.category.trim(),
       listing_type: skill.listingType,
+      tags: skill.tags
+        ? skill.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+        : null,
+      experience_level: skill.experienceLevel?.trim() || null,
+      format: skill.format.trim(),
+      language: skill.language.trim(),
+      location: skill.location?.trim() || null,
     })
     .select()
     .single()
@@ -45,6 +55,16 @@ export async function updateSkill(userId, skillId, skill) {
       description: skill.description.trim(),
       category: skill.category.trim(),
       listing_type: skill.listingType,
+      tags: skill.tags
+        ? skill.tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+        : null,
+      experience_level: skill.experienceLevel?.trim() || null,
+      format: skill.format.trim(),
+      language: skill.language.trim(),
+      location: skill.location?.trim() || null,
     })
     .eq('id', skillId)
     .eq('user_id', userId)
