@@ -139,6 +139,9 @@ export default function Auth({ children, onAuthSuccess }) {
       <div className="auth-authenticated-container">
         <header className="auth-session-bar">
           <nav className="auth-session-nav">
+            <Link to="/search" className="auth-nav-link">
+              Search
+            </Link>
             <Link to="/skills" className="auth-nav-link">
               My Skills
             </Link>
