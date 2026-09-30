@@ -149,11 +149,31 @@
   opacity: 0.85;
 }
 
-/* Session / Auth Bar (Rendered at top of protected content) */
+/* Layout Wrappers with Sticky Footer */
 .auth-authenticated-container {
   width: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  flex: 1;
+}
+
+.auth-page-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.auth-page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .auth-session-bar {

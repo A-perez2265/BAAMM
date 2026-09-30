@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProfilePage from './pages/ProfilePage'
 import SkillManagementPage from './pages/SkillManagementPage'
 import SearchPage from './pages/SearchPage'
+import AdminDashboard from './pages/AdminDashboard'
 import Auth from './components/Auth'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/skills" element={<SkillManagementPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/login" element={<Navigate to="/" replace />} />
         </Routes>
       </Auth>

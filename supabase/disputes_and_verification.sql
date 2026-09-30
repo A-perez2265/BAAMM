@@ -1,0 +1,327 @@
+-- ==============================================================================
+-- SkillSwap Database Migration & Security Configuration
+-- Modules: Verification Videos Storage, User Onboarding Trigger, 
+--          Exchange Dispute System, RLS Policies, and Atomic RPC
+-- ==============================================================================
+
+-- 1. Ensure Profile Schema Extensions
+alter table public.profiles 
+  add column if not exists is_admin boolean not null default false;
+
+alter table public.profiles 
+  add column if not exists verification_video_link text;
+
+alter table public.profiles 
+  add column if not exists general_location text;
+
+alter table public.profiles 
+  add column if not exists location text;
+
+-- Update column default to 3 starter credits
+alter table public.profiles 
+  alter column credits_balance set default 3;
+
+-- 2. Storage Bucket Setup: 'verification-videos'
+-- Public read access enabled for peer community verification.
+-- File size limit: 25MB (26,214,400 bytes).
+-- Allowed MIME types: video/mp4, video/webm, video/quicktime.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'verification-videos',
+  'verification-videos',
+  true,
+  26214400,
+  array['video/mp4', 'video/webm', 'video/quicktime']
+)
+on conflict (id) do update set
+  public = true,
+  file_size_limit = 26214400,
+  allowed_mime_types = array['video/mp4', 'video/webm', 'video/quicktime'];
+
+-- Enable RLS on storage.objects (Supabase default)
+alter table storage.objects enable row level security;
+
+-- Storage Policy 1: Authenticated users can only upload into their own folder: ${auth.uid()}/*
+drop policy if exists "verification_videos_auth_insert" on storage.objects;
+create policy "verification_videos_auth_insert"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'verification-videos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Storage Policy 2: Authenticated users can update/overwrite their own videos
+drop policy if exists "verification_videos_auth_update" on storage.objects;
+create policy "verification_videos_auth_update"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'verification-videos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'verification-videos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Storage Policy 3: Authenticated users can delete their own videos
+drop policy if exists "verification_videos_auth_delete" on storage.objects;
+create policy "verification_videos_auth_delete"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'verification-videos'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Storage Policy 4: Public read access for community verification
+drop policy if exists "verification_videos_public_select" on storage.objects;
+create policy "verification_videos_public_select"
+on storage.objects
+for select
+to public
+using (
+  bucket_id = 'verification-videos'
+);
+
+-- 3. Trigger Function: public.handle_new_user()
+-- Automatically provisions the public.profiles row upon sign-up with 3 starter credits.
+-- Gracefully extracts metadata with fallbacks for username, display_name, and location.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_username text;
+  v_display_name text;
+  v_general_location text;
+  v_video_link text;
+  v_is_admin boolean;
+begin
+  -- Resolve username with fallback
+  v_username := coalesce(
+    nullif(trim(new.raw_user_meta_data->>'username'), ''),
+    split_part(new.email, '@', 1) || '_' || substr(new.id::text, 1, 6)
+  );
+
+  -- Resolve display name with fallback
+  v_display_name := coalesce(
+    nullif(trim(new.raw_user_meta_data->>'display_name'), ''),
+    nullif(trim(new.raw_user_meta_data->>'full_name'), ''),
+    v_username
+  );
+
+  v_general_location := coalesce(
+    nullif(trim(new.raw_user_meta_data->>'general_location'), ''),
+    nullif(trim(new.raw_user_meta_data->>'location'), '')
+  );
+  v_video_link := nullif(trim(new.raw_user_meta_data->>'verification_video_link'), '');
+  v_is_admin := coalesce((new.raw_user_meta_data->>'is_admin')::boolean, false);
+
+  insert into public.profiles (
+    id,
+    username,
+    display_name,
+    general_location,
+    location,
+    verification_video_link,
+    credits_balance,
+    is_admin,
+    created_at
+  ) values (
+    new.id,
+    v_username,
+    v_display_name,
+    v_general_location,
+    v_general_location,
+    v_video_link,
+    3, -- Starter credit: 3 platform credits granted upon registration
+    v_is_admin,
+    now()
+  )
+  on conflict (id) do update set
+    username = coalesce(public.profiles.username, excluded.username),
+    display_name = coalesce(excluded.display_name, public.profiles.display_name),
+    general_location = coalesce(excluded.general_location, public.profiles.general_location),
+    location = coalesce(excluded.location, public.profiles.location),
+    verification_video_link = coalesce(excluded.verification_video_link, public.profiles.verification_video_link);
+
+  return new;
+end;
+$$;
+
+-- Bind Trigger to auth.users
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- 4. Admin Role Helper Function: public.is_admin()
+-- Checks JWT claims (app_metadata or user_metadata) or public.profiles.is_admin
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select coalesce(
+    (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'),
+    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean,
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and is_admin = true
+    ),
+    false
+  );
+$$;
+
+-- 5. Exchanges Status Constraint Update
+-- Ensure exchanges can transition to 'issue_reported'
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables 
+    where table_schema = 'public' and table_name = 'exchanges'
+  ) then
+    alter table public.exchanges drop constraint if exists exchanges_status_check;
+    alter table public.exchanges add constraint exchanges_status_check
+      check (status in ('pending', 'accepted', 'declined', 'session_completed', 'awaiting_confirmation', 'confirmed', 'completed', 'issue_reported', 'disputed'));
+  end if;
+end $$;
+
+-- 6. Dispute System: public.disputes Table & Schema
+create table if not exists public.disputes (
+  id uuid primary key default gen_random_uuid(),
+  exchange_id uuid not null references public.exchanges(id) on delete cascade,
+  reporter_id uuid not null references public.profiles(id),
+  reported_user_id uuid not null references public.profiles(id),
+  reporter_email text not null,
+  reporter_username text not null,
+  reported_username text not null,
+  reason text not null,
+  additional_details text,
+  status text not null default 'open' check (status in ('open', 'under_review', 'resolved')),
+  created_at timestamptz not null default now()
+);
+
+-- Indexes for performant filtering and admin search
+create index if not exists idx_disputes_exchange_id on public.disputes(exchange_id);
+create index if not exists idx_disputes_reporter_id on public.disputes(reporter_id);
+create index if not exists idx_disputes_status on public.disputes(status);
+create index if not exists idx_disputes_created_at on public.disputes(created_at desc);
+
+-- Enable Row Level Security on Disputes
+alter table public.disputes enable row level security;
+
+-- Policy 1: Authenticated participants of an exchange can lodge a dispute
+drop policy if exists "disputes_insert_participants" on public.disputes;
+create policy "disputes_insert_participants"
+on public.disputes
+for insert
+to authenticated
+with check (
+  auth.uid() = reporter_id
+  and exists (
+    select 1 from public.exchanges e
+    where e.id = exchange_id
+      and (e.learner_id = auth.uid() or e.teacher_id = auth.uid())
+  )
+);
+
+-- Policy 2: Users can view disputes they reported, while Admins can view all disputes
+drop policy if exists "disputes_select_policy" on public.disputes;
+create policy "disputes_select_policy"
+on public.disputes
+for select
+to authenticated
+using (
+  auth.uid() = reporter_id
+  or public.is_admin()
+);
+
+-- Policy 3: Admins can update disputes (e.g. status changes to under_review or resolved)
+drop policy if exists "disputes_update_admin_policy" on public.disputes;
+create policy "disputes_update_admin_policy"
+on public.disputes
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+-- 7. Atomic Credit Exchange RPC: complete_exchange()
+-- Prevents double-spending and currency duplication via row-level locking (FOR UPDATE)
+create or replace function public.complete_exchange(p_exchange_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_exchange record;
+  v_learner_balance integer;
+begin
+  -- Step 1: Acquire row-level lock on the exchange
+  select * into v_exchange
+  from public.exchanges
+  where id = p_exchange_id
+  for update;
+
+  if not found then
+    raise exception 'Exchange not found';
+  end if;
+
+  -- Step 2: Prevent double completion
+  if v_exchange.status = 'completed' then
+    raise exception 'Exchange is already completed';
+  end if;
+
+  -- Step 3: Verify caller authorization (must be the learner)
+  if auth.uid() is null or v_exchange.learner_id <> auth.uid() then
+    raise exception 'Unauthorized: Only the learner can complete the exchange';
+  end if;
+
+  -- Step 4: Validate exchange lifecycle state
+  if v_exchange.status not in ('accepted', 'session_completed', 'awaiting_confirmation') then
+    raise exception 'Exchange cannot be finalized in its current status: %', v_exchange.status;
+  end if;
+
+  -- Step 5: Lock learner profile and verify credit balance
+  select credits_balance into v_learner_balance
+  from public.profiles
+  where id = v_exchange.learner_id
+  for update;
+
+  if v_learner_balance < 1 then
+    raise exception 'Insufficient credits to finalize exchange';
+  end if;
+
+  -- Step 6: Transfer 1 platform credit atomically
+  update public.profiles
+  set credits_balance = credits_balance - 1
+  where id = v_exchange.learner_id;
+
+  update public.profiles
+  set credits_balance = credits_balance + 1
+  where id = v_exchange.teacher_id;
+
+  -- Step 7: Finalize exchange status
+  update public.exchanges
+  set status = 'completed',
+      updated_at = now()
+  where id = p_exchange_id;
+
+  return jsonb_build_object(
+    'success', true,
+    'exchange_id', p_exchange_id,
+    'status', 'completed',
+    'transferred_credits', 1
+  );
+end;
+$$;

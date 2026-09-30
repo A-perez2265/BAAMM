@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import Register from './Register';
+import Footer from './Footer';
 import './Auth.css';
 
 export default function Auth({ children, onAuthSuccess }) {
@@ -16,8 +18,6 @@ export default function Auth({ children, onAuthSuccess }) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -25,8 +25,6 @@ export default function Auth({ children, onAuthSuccess }) {
   const resetForm = () => {
     setEmail('');
     setPassword('');
-    setUsername('');
-    setDisplayName('');
     setErrorMessage('');
     setSuccessMessage('');
   };
@@ -81,33 +79,16 @@ export default function Auth({ children, onAuthSuccess }) {
     setSuccessMessage('');
 
     try {
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: username.trim(),
-              display_name: displayName.trim(),
-            },
-          },
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) throw error;
-        setSuccessMessage('Account registered! Check your email or sign in.');
-        setPassword('');
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-        setSuccessMessage('Signed in successfully!');
-        resetForm();
-        const destination = location.state?.from || '/';
-        navigate(destination, { replace: true });
-      }
+      if (error) throw error;
+      setSuccessMessage('Signed in successfully!');
+      resetForm();
+      const destination = location.state?.from || '/';
+      navigate(destination, { replace: true });
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
@@ -175,111 +156,84 @@ export default function Auth({ children, onAuthSuccess }) {
             </p>
           </div>
         )}
+
+        <Footer />
       </div>
     );
   }
 
-  // If not authenticated, render login / signup card
+  // If not authenticated, render Login or Register inside a single layout wrapper
   return (
-    <div className="auth-container">
-      <h2 className="auth-title">{isSignUp ? 'Create a Skill Swap Account' : 'Sign In'}</h2>
-
-      {errorMessage && <div className="auth-alert-error">{errorMessage}</div>}
-      {successMessage && <div className="auth-alert-success">{successMessage}</div>}
-
-      <form onSubmit={handleSubmit} className="auth-form">
-        {isSignUp && (
-          <>
-            <div className="auth-form-group">
-              <label className="auth-label">Username</label>
-              <input
-                type="text"
-                required
-                className="auth-input"
-                placeholder="e.g. alexsmith"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="auth-form-group">
-              <label className="auth-label">Display Name</label>
-              <input
-                type="text"
-                required
-                className="auth-input"
-                placeholder="e.g. Alex Smith"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </div>
-          </>
-        )}
-
-        <div className="auth-form-group">
-          <label className="auth-label">Email Address</label>
-          <input
-            type="email"
-            required
-            className="auth-input"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="auth-form-group">
-          <label className="auth-label">Password</label>
-          <input
-            type="password"
-            required
-            minLength={6}
-            className="auth-input"
-            placeholder="At least 6 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        <button type="submit" disabled={loading} className="auth-btn-submit">
-          {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
-        </button>
-      </form>
-
-      <div className="auth-toggle-container">
+    <div className="auth-page-wrapper">
+      <div className="auth-page-content">
         {isSignUp ? (
-          <p>
-            Already have an account?{' '}
-            <button
-              type="button"
-              className="auth-btn-link"
-              onClick={() => {
-                setIsSignUp(false);
-                setPassword('');
-                setErrorMessage('');
-                setSuccessMessage('');
-              }}
-            >
-              Sign In
-            </button>
-          </p>
+          <Register
+            onSwitchToLogin={() => {
+              setIsSignUp(false);
+              resetForm();
+            }}
+            onRegisterSuccess={() => {
+              setIsSignUp(false);
+              setSuccessMessage('Registration successful! Please sign in with your credentials.');
+            }}
+          />
         ) : (
-          <p>
-            Need an account?{' '}
-            <button
-              type="button"
-              className="auth-btn-link"
-              onClick={() => {
-                setIsSignUp(true);
-                setPassword('');
-                setErrorMessage('');
-                setSuccessMessage('');
-              }}
-            >
-              Sign Up
-            </button>
-          </p>
+          <div className="auth-container">
+            <h2 className="auth-title">Sign In</h2>
+
+            {errorMessage && <div className="auth-alert-error">{errorMessage}</div>}
+            {successMessage && <div className="auth-alert-success">{successMessage}</div>}
+
+            <form onSubmit={handleSubmit} className="auth-form">
+              <div className="auth-form-group">
+                <label className="auth-label">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  className="auth-input"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+
+              <div className="auth-form-group">
+                <label className="auth-label">Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  className="auth-input"
+                  placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" disabled={loading} className="auth-btn-submit">
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
+
+            <div className="auth-toggle-container">
+              <p>
+                Need an account?{' '}
+                <button
+                  type="button"
+                  className="auth-btn-link"
+                  onClick={() => {
+                    setIsSignUp(true);
+                    resetForm();
+                  }}
+                >
+                  Sign Up
+                </button>
+              </p>
+            </div>
+          </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
