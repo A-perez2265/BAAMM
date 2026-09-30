@@ -1,11 +1,11 @@
-.incoming-requests {
+.confirm-exchanges {
   text-align: left;
   padding: 24px 20px 48px;
   max-width: 720px;
   margin: 0 auto;
 }
 
-.incoming-requests-feed {
+.confirm-exchanges-feed {
   list-style: none;
   padding: 0;
   margin: 24px 0 0;
@@ -14,28 +14,28 @@
   gap: 16px;
 }
 
-.incoming-requests-card {
+.confirm-exchanges-card {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
   background: var(--bg);
 }
 
-.incoming-requests-card h2 {
+.confirm-exchanges-card h2 {
   margin: 0 0 8px;
 }
 
-.incoming-requests-card p {
+.confirm-exchanges-card p {
   margin: 0 0 8px;
 }
 
-.incoming-requests-actions {
+.confirm-exchanges-actions {
   display: flex;
   gap: 8px;
   margin-top: 12px;
 }
 
-.incoming-requests button {
+.confirm-exchanges button {
   padding: 8px 14px;
   border-radius: 6px;
   border: 2px solid transparent;
@@ -44,19 +44,15 @@
   cursor: pointer;
 }
 
-.incoming-requests button:disabled {
+.confirm-exchanges button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.incoming-requests-error {
+.confirm-exchanges-error {
   color: #ef4444;
 }
 
-.incoming-requests-success {
+.confirm-exchanges-success {
   color: #16a34a;
-}
-
-.incoming-requests-section {
-  margin-top: 40px;
 }

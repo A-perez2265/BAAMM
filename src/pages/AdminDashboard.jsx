@@ -69,16 +69,35 @@ export default function AdminDashboard() {
   }, []);
 
   // 2. Load disputes
-  const fetchDisputes = useCallback(async () => {
-    setLoadingDisputes(true);
-    setActionError('');
+  const fetchDisputes = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoadingDisputes(true);
+      setActionError('');
+    }
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('disputes')
-        .select('*')
+        .select('*, dispute_actions(*)')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        const historyMissing =
+          /dispute_actions/i.test(error.message || '') ||
+          error.code === 'PGRST200' ||
+          error.code === '42P01';
+        if (!historyMissing) throw error;
+
+        const fallback = await supabase
+          .from('disputes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (fallback.error) throw fallback.error;
+        data = (fallback.data || []).map((row) => ({
+          ...row,
+          dispute_actions: [],
+        }));
+      }
+
       setDisputes(data || []);
     } catch (err) {
       console.error('Error fetching disputes:', err);
@@ -102,8 +121,65 @@ export default function AdminDashboard() {
     };
   }, [isAdmin, fetchDisputes]);
 
-  // 3. Update dispute status
-  const handleUpdateStatus = async (disputeId, newStatus) => {
+  const actorLabel = currentUser?.email || 'admin';
+
+  const logDisputeAction = async (disputeId, action, detail) => {
+    if (!currentUser?.id) {
+      throw new Error('Not signed in');
+    }
+
+    const { error } = await supabase.from('dispute_actions').insert({
+      dispute_id: disputeId,
+      actor_id: currentUser.id,
+      actor_label: actorLabel,
+      action,
+      detail,
+    });
+
+    if (error) throw error;
+  };
+
+  const handleGrantCredits = async (dispute) => {
+    setActionError('');
+    setActionSuccess('');
+
+    if (!dispute.reporter_id) {
+      setActionError('Cannot grant credits: missing reporter user id.');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('admin_grant_credits', {
+        p_user_id: dispute.reporter_id,
+        p_amount: 1,
+      });
+
+      if (error) throw error;
+
+      const balance = data?.credits_balance;
+      const username = dispute.reporter_username || 'user';
+      const detail = `Granted 1 credit to @${username}${
+        balance != null ? ` (new balance: ${balance})` : ''
+      }.`;
+
+      let historyNote = '';
+      try {
+        await logDisputeAction(dispute.id, 'credits_granted', detail);
+        await fetchDisputes({ silent: true });
+      } catch (historyError) {
+        console.error('Ticket history was not saved:', historyError);
+        historyNote =
+          ' History was not saved — run the dispute_actions SQL if you have not yet.';
+      }
+
+      setActionSuccess(detail + historyNote);
+    } catch (err) {
+      console.error('Credit grant failed:', err);
+      setActionError('Failed to grant credits: ' + err.message);
+    }
+  };
+
+  const handleUpdateStatus = async (dispute, newStatus) => {
     setActionError('');
     setActionSuccess('');
 
@@ -111,16 +187,30 @@ export default function AdminDashboard() {
       const { error } = await supabase
         .from('disputes')
         .update({ status: newStatus })
-        .eq('id', disputeId);
+        .eq('id', dispute.id);
 
       if (error) throw error;
 
-      setActionSuccess(`Ticket status updated to "${newStatus.replace('_', ' ')}".`);
-      
-      // Update local state
-      setDisputes((prev) =>
-        prev.map((d) => (d.id === disputeId ? { ...d, status: newStatus } : d))
-      );
+      const fromLabel = (dispute.status || 'open').replace('_', ' ');
+      const toLabel = newStatus.replace('_', ' ');
+      const detail = `Changed status from ${fromLabel} to ${toLabel}.`;
+
+      let historyNote = '';
+      try {
+        await logDisputeAction(dispute.id, 'status_changed', detail);
+        await fetchDisputes({ silent: true });
+      } catch (historyError) {
+        console.error('Ticket history was not saved:', historyError);
+        historyNote =
+          ' History was not saved — run the dispute_actions SQL if you have not yet.';
+        setDisputes((prev) =>
+          prev.map((d) =>
+            d.id === dispute.id ? { ...d, status: newStatus } : d
+          )
+        );
+      }
+
+      setActionSuccess(`Ticket status updated to "${toLabel}".` + historyNote);
     } catch (err) {
       console.error('Status update failed:', err);
       setActionError('Failed to update status: ' + err.message);
@@ -395,17 +485,60 @@ export default function AdminDashboard() {
                     </div>
                   )}
                 </div>
+
+                <details className="dispute-history">
+                  <summary className="dispute-history-toggle">
+                    See details
+                    {(dispute.dispute_actions?.length || 0) > 0
+                      ? ` (${dispute.dispute_actions.length})`
+                      : ''}
+                  </summary>
+                  <ol className="dispute-history-list">
+                    <li>
+                      <time className="history-time">
+                        {formatDate(dispute.created_at)}
+                      </time>
+                      <span className="history-text">
+                        Ticket opened by @{dispute.reporter_username}
+                      </span>
+                    </li>
+                    {(dispute.dispute_actions || [])
+                      .slice()
+                      .sort(
+                        (a, b) =>
+                          new Date(a.created_at) - new Date(b.created_at)
+                      )
+                      .map((entry) => (
+                        <li key={entry.id}>
+                          <time className="history-time">
+                            {formatDate(entry.created_at)}
+                          </time>
+                          <span className="history-text">{entry.detail}</span>
+                          <span className="history-actor">
+                            {entry.actor_label}
+                          </span>
+                        </li>
+                      ))}
+                  </ol>
+                </details>
               </div>
 
               {/* Status Action Controls */}
               <footer className="dispute-card-actions">
                 <span className="actions-label">Change Status:</span>
                 <div className="action-button-group">
+                  <button
+                    type="button"
+                    className="btn-status btn-resolve"
+                    onClick={() => handleGrantCredits(dispute)}
+                  >
+                    Grant 1 credit to reporter
+                  </button>
                   {dispute.status !== 'under_review' && (
                     <button
                       type="button"
                       className="btn-status btn-review"
-                      onClick={() => handleUpdateStatus(dispute.id, 'under_review')}
+                      onClick={() => handleUpdateStatus(dispute, 'under_review')}
                     >
                       Mark Under Review
                     </button>
@@ -415,7 +548,7 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       className="btn-status btn-resolve"
-                      onClick={() => handleUpdateStatus(dispute.id, 'resolved')}
+                      onClick={() => handleUpdateStatus(dispute, 'resolved')}
                     >
                       Resolve Dispute
                     </button>
@@ -425,7 +558,7 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       className="btn-status btn-reopen"
-                      onClick={() => handleUpdateStatus(dispute.id, 'open')}
+                      onClick={() => handleUpdateStatus(dispute, 'open')}
                     >
                       Reopen Ticket
                     </button>
