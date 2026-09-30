@@ -72,10 +72,9 @@ export default function DisputeModal({
     setLoading(true);
 
     try {
-      // Step 1: Insert into public.disputes
       const disputePayload = {
         exchange_id: exchange.id,
-        reporter_id: currentUser.id,
+        reporter_id: currentUser?.id,
         reported_user_id: reportedUserId,
         reporter_email: reporterEmail,
         reporter_username: reporterUsername,
@@ -85,6 +84,7 @@ export default function DisputeModal({
         status: 'open',
       };
 
+      // Step 1: Insert into public.disputes
       const { data: disputeData, error: disputeError } = await supabase
         .from('disputes')
         .insert([disputePayload])
@@ -106,7 +106,9 @@ export default function DisputeModal({
         console.warn('Note: Could not update exchange status:', exchangeError.message);
       }
 
-      setSuccessMessage('Dispute submitted successfully. An administrator will review your case.');
+      setSuccessMessage(
+        'Dispute submitted successfully. An administrator will review your report and email you within 24–48 hours once a resolution is reached.'
+      );
       
       setTimeout(() => {
         if (onDisputeSubmitted) {
@@ -226,6 +228,15 @@ export default function DisputeModal({
               onChange={(e) => setAdditionalDetails(e.target.value)}
               disabled={loading}
             />
+          </div>
+
+          {/* Admin Resolution Email Notice */}
+          <div className="dispute-notice-box">
+            <span className="dispute-notice-icon" aria-hidden="true">✉️</span>
+            <p className="dispute-notice-text">
+              An administrator will review your report and email you at{' '}
+              <strong>{reporterEmail || 'your registered email'}</strong> once a resolution has been reached within <strong>24–48 hours</strong>.
+            </p>
           </div>
 
           <footer className="dispute-modal-actions">
