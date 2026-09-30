@@ -412,6 +412,56 @@
   font-size: 0.88rem;
 }
 
+.dispute-history {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--code-bg);
+}
+
+.dispute-history-toggle {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-h);
+  padding: 0.55rem 0.85rem;
+}
+
+.dispute-history-toggle::-webkit-details-marker {
+  color: var(--text);
+}
+
+.dispute-history-list {
+  margin: 0;
+  padding: 0 0.85rem 0.85rem 0.85rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dispute-history-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.history-time {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
+.history-text {
+  color: var(--text-h);
+}
+
+.history-actor {
+  font-size: 0.75rem;
+  color: var(--text);
+}
+
 /* Card Actions */
 .dispute-card-actions {
   display: flex;
