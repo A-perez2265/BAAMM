@@ -25,3 +25,6 @@ create index if not exists exchanges_learner_status_idx
   on public.exchanges (learner_id, status);
 
 alter table public.exchanges enable row level security;
+
+alter table public.exchanges
+  add column if not exists message text not null default '';

@@ -126,6 +126,9 @@ export default function Auth({ children, onAuthSuccess }) {
             <Link to="/request" className="auth-nav-link">
               Request
             </Link>
+            <Link to="/incoming" className="auth-nav-link">
+              Incoming
+            </Link>
             <Link to="/skills" className="auth-nav-link">
               My Skills
             </Link>
