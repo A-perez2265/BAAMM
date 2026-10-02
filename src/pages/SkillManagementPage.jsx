@@ -1,13 +1,17 @@
+import { privacyMessage } from '../utils/publicTextPrivacy'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import SkillForm from '../components/skills/SkillForm'
 import SkillCard from '../components/skills/SkillCard'
+import SkillFilters from '../components/skills/SkillFilters'
+import CommunityIcon from '../components/CommunityIcon'
 import { createEmptySkill, formatSkillFromDatabase, prepareSkillForSave, validateSkill } from '../utils/skillUtils'
 import { getSkills, addSkill, updateSkill, deleteSkill } from '../services/skillService'
 
 export default function SkillManagementPage() {
   const [skills, setSkills] = useState([])
+  const [roleFilter, setRoleFilter] = useState('All')
   const [userId, setUserId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -67,8 +71,9 @@ export default function SkillManagementPage() {
         : await updateSkill(userId, editor, prepared))
       setSkills(current => editor === 'new' ? [saved, ...current] : current.map(skill => skill.id === editor ? saved : skill))
       setMessage(`${saved.title} ${editor === 'new' ? 'added' : 'updated'}. You can see it on your profile.`)
+      setRoleFilter('All')
       closeEditor()
-    } catch { showError('Unable to save this skill. Your edits are still here; please try again.') }
+    } catch (saveError) { showError(saveError.code === 'PUBLIC_CONTACT_DETAILS' || saveError.message?.includes('PUBLIC_CONTACT_DETAILS') ? privacyMessage : 'Unable to save this skill. Your edits are still here; please try again.') }
     finally { setBusy(false) }
   }
   async function remove(skill) {
@@ -87,15 +92,17 @@ export default function SkillManagementPage() {
   }
 
   return (
-    <main id="main-content" className="community-page" tabIndex={-1}>
-      <div className="page-heading"><div><p className="eyebrow">A little knowledge goes a long way</p><h1>My skills</h1><p>Share what you know. Explore what you could learn.</p></div><button ref={addButton} className="primary-button" disabled={loading || busy || !userId} onClick={event => openEditor(null, event.currentTarget)}>Add a skill</button></div>
+    <main id="main-content" className="community-page skills-page" tabIndex={-1}>
+      <div className="page-heading"><div><h1>My skills <span className="count">{skills.length}</span></h1><p>Share what you know. Explore what you could learn.</p></div><button ref={addButton} className="primary-button" disabled={loading || busy || !userId} onClick={event => openEditor(null, event.currentTarget)}><CommunityIcon name="plus" />Add a skill</button></div>
       <p role="status" className={message ? 'notice success' : 'sr-only'}>{message}</p>
       {error && <p ref={errorRef} role="alert" tabIndex={-1} className="notice error">{error}</p>}
       {loading ? <p role="status" className="panel">Loading your skills…</p> : userId && <>
         {editor && <section className="panel skill-editor" aria-labelledby="editor-title"><h2 id="editor-title">{editor === 'new' ? 'Add a skill' : 'Edit your skill'}</h2><p className="form-intro">Help someone find their next learning moment. Keep contact details and exact addresses private.</p><SkillForm key={editor} skill={draft} setSkill={setDraft} onSubmit={save} onCancel={() => { setError(''); closeEditor() }} busy={busy} submitLabel={editor === 'new' ? 'Save skill' : 'Save changes'} /></section>}
-        <section aria-labelledby="portfolio-title"><div className="section-heading"><div><h2 id="portfolio-title">Your portfolio <span className="count">{skills.length}</span></h2><p>Your listings also appear on your profile.</p></div><Link className="text-link" to="/profile">View my profile →</Link></div>
-          {skills.length ? <div className="skills-grid">{skills.map(skill => <SkillCard key={skill.id} skill={skill}>
-            {removing === skill.id ? <div className="remove-confirmation"><p id={`remove-${skill.id}`}>Remove “{skill.title}” from your portfolio?</p><button autoFocus className="danger-button" disabled={busy} aria-describedby={`remove-${skill.id}`} onClick={() => remove(skill)}>{busy ? 'Removing…' : 'Yes, remove'}</button><button disabled={busy} onClick={() => { setRemoving(null); requestAnimationFrame(() => document.getElementById(`remove-button-${skill.id}`)?.focus()) }}>Keep skill</button></div> : <><button disabled={busy} aria-label={`Edit ${skill.title}`} onClick={event => openEditor(skill, event.currentTarget)}>Edit</button><button id={`remove-button-${skill.id}`} className="text-button" disabled={busy} aria-label={`Remove ${skill.title}`} onClick={() => { setRemoving(skill.id); setMessage('') }}>Remove</button></>}
+        <section aria-labelledby="portfolio-title"><div className="section-heading portfolio-toolbar"><div><h2 id="portfolio-title" className="sr-only">Your portfolio</h2><SkillFilters skills={skills} value={roleFilter} onChange={setRoleFilter} /></div><Link className="text-link" to="/profile">View my profile →</Link></div>
+          <p className="sr-only" role="status">{skills.filter(skill => roleFilter === 'All' || skill.listingType === roleFilter).length} skills shown.</p>
+          {skills.length > 0 && !skills.some(skill => roleFilter === 'All' || skill.listingType === roleFilter) && <div className="panel empty-state"><h3>No {roleFilter.toLowerCase()} listings yet</h3><p>Add a skill or select All to see your other listings.</p><button onClick={() => setRoleFilter('All')}>Show all skills</button></div>}
+          {skills.length ? <div className="skills-grid">{skills.filter(skill => roleFilter === 'All' || skill.listingType === roleFilter).map(skill => <SkillCard key={skill.id} skill={skill}>
+            {removing === skill.id ? <div className="remove-confirmation"><p id={`remove-${skill.id}`}>Remove “{skill.title}” from your portfolio?</p><button autoFocus className="danger-button" disabled={busy} aria-describedby={`remove-${skill.id}`} onClick={() => remove(skill)}>{busy ? 'Removing…' : 'Yes, remove'}</button><button disabled={busy} onClick={() => { setRemoving(null); requestAnimationFrame(() => document.getElementById(`remove-button-${skill.id}`)?.focus()) }}>Keep skill</button></div> : <><button disabled={busy} aria-label={`Edit ${skill.title}`} onClick={event => openEditor(skill, event.currentTarget)}><CommunityIcon name="edit" />Edit</button><button id={`remove-button-${skill.id}`} className="text-button" disabled={busy} aria-label={`Remove ${skill.title}`} onClick={() => { setRemoving(skill.id); setMessage('') }}><CommunityIcon name="remove" />Remove</button></>}
           </SkillCard>)}</div> : <div className="panel empty-state"><span className="empty-icon" aria-hidden="true">✦</span><h3>You know something worth sharing</h3><p>From baking to coding, every skill has a place here.<br />Add your first listing to get started.</p><button className="primary-button" disabled={busy} onClick={event => openEditor(null, event.currentTarget)}>Add your first skill</button></div>}
         </section>
       </>}

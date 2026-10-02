@@ -1,3 +1,4 @@
+import { validatePublicFields } from './publicTextPrivacy'
 export const isValidGeneralLocation = (location) => {
     const trimmedLocation = location.trim()
 
@@ -46,21 +47,33 @@ export const formatGeneralLocation = (location) => {
 
     return `${formattedCity}, ${formattedRegion}`
 }
-export const capitalizeWords = (value) => {
-    return value.replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
-}
+// Capitalize on blur/save without lowercasing acronyms or changing the rest of a sentence.
+export const capitalizeWords = (value) => value.replace(
+    /(^|[\s-])(\p{L}[\p{L}\p{N}'’]*)/gu,
+    (_match, prefix, word) => prefix + (/\p{Lu}/u.test(word.slice(1)) ? word : word[0].toUpperCase() + word.slice(1))
+)
+export const capitalizeSentences = (value) => value.replace(
+    /(^|[.!?]\s+|\n)([\s"'“‘([{]*)(\p{Ll})/gu,
+    (_match, boundary, prefix, letter) => boundary + prefix + letter.toUpperCase()
+)
 export const capitalizeFirstLetter = (value) => {
     if (!value) return ''
     return value.charAt(0).toUpperCase() + value.slice(1)
 }
-export const formatTags = (value) => {
-    return value
-        .split(',')
-        .map((tag) => tag.trim())
+// Accept the old comma-separated input and hashtags, but store plain tags in the array.
+export const parseTags = (value) => {
+    const parts = (Array.isArray(value) ? value : [value || ''])
+        .flatMap(tag => tag.split(/[,\s#]+/u))
         .filter(Boolean)
-        .map((tag) => `#${tag.replace(/^#+/, '')}`)
-        .join(', ')
+    const seen = new Set()
+    return parts.filter(tag => {
+        const key = tag.toLocaleLowerCase()
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+    })
 }
+export const formatTags = (value) => parseTags(value).map(tag => `#${tag}`).join(' ')
 export const createEmptySkill = () => ({
     title: '',
     description: '',
@@ -74,16 +87,18 @@ export const createEmptySkill = () => ({
 })
 export const formatSkillFromDatabase = (skill) => ({
     ...skill,
+    title: capitalizeWords(skill.title || ''),
+    description: capitalizeSentences(skill.description || ''),
     listingType: skill.listing_type,
     experienceLevel: skill.experience_level,
-    tags: skill.tags ? skill.tags.join(', ') : '',
+    tags: formatTags(skill.tags),
 })
 export const prepareSkillForSave = (skill) => ({
-    title: skill.title.trim(),
-    description: skill.description.trim(),
+    title: capitalizeWords(skill.title.trim()),
+    description: capitalizeSentences(skill.description.trim()),
     category: skill.category.trim(),
     listingType: skill.listingType.trim(),
-    tags: skill.tags,
+    tags: formatTags(skill.tags),
     experienceLevel: (skill.experienceLevel || '').trim(),
     format: skill.format.trim(),
     language: skill.language.trim(),
@@ -109,5 +124,5 @@ export const validateSkill = (skill) => {
         return 'Please enter a location in City, State/Region format.'
     }
 
-    return ''
+    return validatePublicFields(skill)
 }
