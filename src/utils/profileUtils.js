@@ -1,12 +1,14 @@
+import { isValidAvatarId } from '../constants/avatarOptions'
 import { validatePublicFields } from './publicTextPrivacy'
 import { isValidGeneralLocation, formatGeneralLocation, capitalizeSentences } from './skillUtils'
 
-export const emptyProfile = { displayName: '', username: '', bio: '', location: '' }
+export const emptyProfile = { displayName: '', username: '', bio: '', location: '', avatarId: null }
 export const formatProfile = (profile) => ({
   displayName: profile.display_name || '',
   username: profile.username || '',
   bio: capitalizeSentences(profile.bio || ''),
   location: profile.location || '',
+  avatarId: isValidAvatarId(profile.avatar_id) ? profile.avatar_id || null : null,
 })
 export function prepareProfile(profile) {
   return {
@@ -14,9 +16,11 @@ export function prepareProfile(profile) {
     username: profile.username.trim(),
     bio: capitalizeSentences(profile.bio.trim()),
     location: formatGeneralLocation(profile.location),
+    avatarId: profile.avatarId || null,
   }
 }
 export function validateProfile(profile) {
+  if (!isValidAvatarId(profile.avatarId ?? null)) return 'Choose an avatar from the available options.'
   if (!profile.displayName || !profile.username || !profile.location) {
     return 'Enter a display name, username, and city/state.'
   }

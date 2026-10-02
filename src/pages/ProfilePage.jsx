@@ -1,3 +1,5 @@
+import AvatarPicker from '../components/AvatarPicker'
+import ProfileAvatar from '../components/ProfileAvatar'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
@@ -79,7 +81,9 @@ export default function ProfilePage() {
       setMessage('Profile saved. Your changes are now visible on your profile.')
       closeEditor()
     } catch (saveError) {
-      showError(saveError.code === 'PUBLIC_CONTACT_DETAILS' || saveError.message?.includes('PUBLIC_CONTACT_DETAILS')
+      showError(saveError.code === 'AVATAR_NOT_ENABLED'
+        ? saveError.message
+        : saveError.code === 'PUBLIC_CONTACT_DETAILS' || saveError.message?.includes('PUBLIC_CONTACT_DETAILS')
         ? privacyMessage
         : saveError.code === '23505'
         ? 'That username is already taken. Try another one.'
@@ -100,6 +104,7 @@ export default function ProfilePage() {
                 <h1>Edit profile</h1><p className="form-intro">These details appear on your public profile. Keep contact details and exact addresses private.</p>
                 <fieldset disabled={saving} className="form-grid">
                   <legend className="sr-only">Public profile information</legend>
+                  <AvatarPicker value={draft.avatarId} initials={initials} onChange={avatarId => setDraft(current => ({ ...current, avatarId }))} />
                   <label>Display name <span className="required-note">(required)</span><input autoFocus required maxLength={80} autoComplete="nickname" value={draft.displayName} onChange={event => setDraft({ ...draft, displayName: event.target.value })} /></label>
                   <label>Username <span className="required-note">(required)</span><input required minLength={3} maxLength={30} autoCapitalize="none" spellCheck={false} aria-describedby="username-help" value={draft.username} onChange={event => setDraft({ ...draft, username: event.target.value })} /><span id="username-help" className="field-help">3–30 letters, numbers, periods, hyphens, or underscores.</span></label>
                   <label className="full-width">Bio<textarea autoCapitalize="sentences" onBlur={() => setDraft(current => ({ ...current, bio: capitalizeSentences(current.bio) }))} maxLength={500} rows={4} aria-describedby="bio-help" value={draft.bio} onChange={event => setDraft({ ...draft, bio: event.target.value })} /><span id="bio-help" className="field-help">Share your interests and what you enjoy teaching. No emails, phone numbers, or street addresses. Up to 500 characters.</span></label>
@@ -110,7 +115,7 @@ export default function ProfilePage() {
             ) : (
               <>
                 <div className="profile-header">
-                  <div className="avatar" aria-hidden="true">{initials}</div>
+                  <ProfileAvatar avatarId={profile.avatarId} initials={initials} />
                   <div className="profile-identity"><h1>{profile.displayName || 'Your profile'}</h1>{profile.username && <p>@{profile.username}</p>}{profile.location && <p className="profile-location"><CommunityIcon name="location" />{profile.location}</p>}</div>
                   {isOwner && <button className="primary-button" ref={editButton} onClick={() => { setDraft(profile); setError(''); setMessage(''); setIsEditing(true) }}>Edit profile</button>}
                 </div>

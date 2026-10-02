@@ -226,3 +226,17 @@ input::placeholder, textarea::placeholder { color: #6c6269; opacity: 1; }
   .skill-filter { padding: 8px 12px; }
   .skills-page .page-heading > .primary-button { width: 100%; }
 }
+
+/* Preset avatars: portrait regions only, with accessible names on picker buttons. */
+.animal-avatar { position: relative; overflow: hidden; border-radius: 50%; background: white; border: 2px solid var(--brand-teal); box-shadow: none; }
+.animal-avatar-art { position: absolute; inset: 5%; border-radius: 50%; background-color: white; background-repeat: no-repeat; }
+.avatar-picker { min-width: 0; border: 0; padding: 0; margin: 0 0 12px; }
+.avatar-picker legend { font-weight: 700; padding: 0; }
+.avatar-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; margin-top: 16px; }
+.avatar-option { position: relative; display: grid; place-items: center; padding: 5px !important; border: 2px solid transparent; background: transparent; border-radius: 50%; aspect-ratio: 1; min-width: 0; }
+.avatar-option .avatar { width: 64px; height: 64px; aspect-ratio: 1; border-radius: 50%; font-size: 1.25rem; }
+.avatar-option[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-bg); }
+.avatar-option:hover { border-color: var(--brand-teal); }
+.avatar-check { position: absolute; right: 0; bottom: 0; background: var(--accent); color: white; border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; font-size: 14px; }
+.avatar-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); z-index: 2; background: #29252a; color: white; padding: 6px 9px; border-radius: 6px; font-size: 12px; line-height: 1.4; white-space: nowrap; pointer-events: none; }
+.avatar-option:hover .avatar-tooltip, .avatar-option:focus-visible .avatar-tooltip { display: block; }

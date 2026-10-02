@@ -50,14 +50,23 @@ try {
   const saved = await saveProfile('owner', { ...profile, is_admin: true, credits: 999 })
   assert.equal(saved.display_name, 'Mallory')
   assert.deepEqual(calls.find(([method]) => method === 'update')[1], {
-    display_name: 'Mallory', username: 'mallory.s', bio: 'Hello!', location: 'San Antonio, TX',
+    display_name: 'Mallory', username: 'mallory.s', bio: 'Hello!', location: 'San Antonio, TX', avatar_id: null,
   })
   assert.deepEqual(calls.find(([method]) => method === 'eq'), ['eq', 'id', 'owner'])
   assert.equal(calls.at(-1)[0], 'single')
   calls = []
   await getProfile('member')
-  assert.equal(calls.find(([method]) => method === 'select')[1], 'id, display_name, username, bio, location')
+  assert.equal(calls.find(([method]) => method === 'select')[1], 'id, display_name, username, bio, location, avatar_id')
   assert.deepEqual(calls.find(([method]) => method === 'eq'), ['eq', 'id', 'member'])
+  calls = []
+  await saveProfile('owner', { ...profile, avatarId: 'hedgehog' })
+  assert.equal(calls.find(([method]) => method === 'update')[1].avatar_id, 'hedgehog')
+  calls = []
+  await assert.rejects(saveProfile('owner', { ...profile, avatarId: 'unlisted' }), /available options/)
+  assert.equal(calls.length, 0)
+  assert.match(validateProfile({ ...profile, avatarId: 'unlisted' }), /available options/)
+  response = { data: null, error: { code: '42703', message: 'column avatar_id does not exist' } }
+  await assert.rejects(saveProfile('owner', { ...profile, avatarId: 'hedgehog' }), error => error.code === 'AVATAR_NOT_ENABLED')
   response = { data: null, error: { code: '23505' } }
   await assert.rejects(saveProfile('owner', profile), error => error.code === '23505')
 
