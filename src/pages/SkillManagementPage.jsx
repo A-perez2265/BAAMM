@@ -1,282 +1,104 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import SkillForm from '../components/skills/SkillForm'
-import {
-    createEmptySkill,
-    formatSkillFromDatabase,
-    prepareSkillForSave,
-    validateSkill,
-} from '../utils/skillUtils'
+import SkillCard from '../components/skills/SkillCard'
+import { createEmptySkill, formatSkillFromDatabase, prepareSkillForSave, validateSkill } from '../utils/skillUtils'
+import { getSkills, addSkill, updateSkill, deleteSkill } from '../services/skillService'
 
-import {
-    getSkills,
-    addSkill,
-    updateSkill,
-    deleteSkill,
-} from '../services/skillService'
+export default function SkillManagementPage() {
+  const [skills, setSkills] = useState([])
+  const [userId, setUserId] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [editor, setEditor] = useState(null)
+  const [draft, setDraft] = useState(createEmptySkill)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [removing, setRemoving] = useState(null)
+  const errorRef = useRef(null)
+  const addButton = useRef(null)
+  const editorTrigger = useRef(null)
 
-function SkillManagementPage() {
-    // Deleted the initial skills state to start with an empty list & added null
-    const [skills, setSkills] = useState([])
-    const [userId, setUserId] = useState(null)
-
-    // Controls whether the add-skill form is visible
-    const [showAddForm, setShowAddForm] = useState(false)
-
-    // Stores the values entered into the add-skill form
-    const [newSkill, setNewSkill] = useState(createEmptySkill)
-
-    // Tracks which skill is currently being edited
-    const [editingSkillId, setEditingSkillId] = useState(null)
-
-    // Stores temporary values while editing
-    const [editSkill, setEditSkill] = useState(createEmptySkill)
-    // Stores validation errors for adding a skill
-    const [addError, setAddError] = useState('')
-
-    // Stores validation errors for editing a skill
-    const [editError, setEditError] = useState('')
-    useEffect(() => {
-        const loadUserSkills = async () => {
-            try {
-                const {
-                    data: { user },
-                    error: userError,
-                } = await supabase.auth.getUser()
-
-                if (userError) {
-                    throw userError
-                }
-
-                if (!user) {
-                    return
-                }
-
-                setUserId(user.id)
-
-                const skillData = await getSkills(user.id)
-
-                const formattedSkills = skillData.map(formatSkillFromDatabase)
-
-                setSkills(formattedSkills)
-            } catch (error) {
-                console.error('Error loading user skills:', error)
-            }
-        }
-
-        loadUserSkills()
-    }, [])
-
-
-    // Adds a new skill to the user's skill list
-    const handleAddSkill = async () => {
-        const preparedSkill = prepareSkillForSave(newSkill)
-
-        const validationError = validateSkill(preparedSkill)
-
-        if (validationError) {
-            setAddError(validationError)
-            return
-        }
-
-        if (!userId) {
-            setAddError('Unable to identify the signed-in user.')
-            return
-        }
-
-        try {
-            const savedSkill = await addSkill(userId, preparedSkill)
-
-            const formattedSkill = formatSkillFromDatabase(savedSkill)
-
-            setSkills([
-                ...skills,
-                formattedSkill,
-            ])
-            setNewSkill(createEmptySkill())
-
-            setAddError('')
-            setShowAddForm(false)
-        } catch (error) {
-            console.error('Error adding skill:', error)
-            setAddError('Unable to save skill. Please try again.')
-        }
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError) throw authError
+        if (!user) throw new Error('Sign in to manage skills.')
+        const data = await getSkills(user.id)
+        if (active) { setUserId(user.id); setSkills(data.map(formatSkillFromDatabase)) }
+      } catch {
+        if (active) setError('Unable to load your skills. Please refresh to try again.')
+      } finally { if (active) setLoading(false) }
     }
-    // Opens the selected skill in edit mode
-    const handleEditSkill = (skill) => {
-        setEditingSkillId(skill.id)
-        setEditError('')
+    load()
+    return () => { active = false }
+  }, [])
 
-        setEditSkill({
-            title: skill.title,
-            description: skill.description,
-            category: skill.category,
-            listingType: skill.listingType,
-            tags: skill.tags || '',
-            experienceLevel: skill.experienceLevel || '',
-            format: skill.format || '',
-            language: skill.language || '',
-            location: skill.location || '',
-        })
-    }
-    // Saves changes to the selected skill & added async function to handle saving edits
-    const handleSaveEdit = async () => {
-        const preparedSkill = prepareSkillForSave(editSkill)
+  function showError(text) {
+    setError(text)
+    requestAnimationFrame(() => errorRef.current?.focus())
+  }
+  function closeEditor() {
+    setEditor(null)
+    requestAnimationFrame(() => (editorTrigger.current?.isConnected ? editorTrigger.current : addButton.current)?.focus())
+  }
+  function openEditor(skill, trigger) {
+    editorTrigger.current = trigger
+    setEditor(skill ? skill.id : 'new')
+    setDraft(skill ? { ...createEmptySkill(), ...skill, experienceLevel: skill.experienceLevel || '', location: skill.location || '' } : createEmptySkill())
+    setRemoving(null)
+    setError('')
+    setMessage('')
+  }
+  async function save(event) {
+    event.preventDefault()
+    if (busy || !userId) return
+    const prepared = prepareSkillForSave(draft)
+    const validationError = validateSkill(prepared)
+    if (validationError) { showError(validationError); return }
+    setBusy(true)
+    setError('')
+    try {
+      const saved = formatSkillFromDatabase(editor === 'new'
+        ? await addSkill(userId, prepared)
+        : await updateSkill(userId, editor, prepared))
+      setSkills(current => editor === 'new' ? [saved, ...current] : current.map(skill => skill.id === editor ? saved : skill))
+      setMessage(`${saved.title} ${editor === 'new' ? 'added' : 'updated'}. You can see it on your profile.`)
+      closeEditor()
+    } catch { showError('Unable to save this skill. Your edits are still here; please try again.') }
+    finally { setBusy(false) }
+  }
+  async function remove(skill) {
+    if (busy || !userId) return
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      await deleteSkill(userId, skill.id)
+      setSkills(current => current.filter(item => item.id !== skill.id))
+      setRemoving(null)
+      setMessage(`${skill.title} removed from your portfolio.`)
+      requestAnimationFrame(() => addButton.current?.focus())
+    } catch { showError('Unable to remove this skill. Please try again.') }
+    finally { setBusy(false) }
+  }
 
-        const validationError = validateSkill(preparedSkill)
-
-        if (validationError) {
-            setEditError(validationError)
-            return
-        }
-
-        if (!userId) {
-            setEditError('Unable to identify the signed-in user.')
-            return
-        }
-
-        try {
-            const savedSkill = await updateSkill(
-                userId,
-                editingSkillId,
-                preparedSkill
-            )
-
-            const formattedSkill = formatSkillFromDatabase(savedSkill)
-            setSkills(
-                skills.map((skill) =>
-                    skill.id === editingSkillId ? formattedSkill : skill
-                )
-            )
-
-            setEditError('')
-            setEditingSkillId(null)
-        } catch (error) {
-            console.error('Error updating skill:', error)
-            setEditError('Unable to update skill. Please try again.')
-        }
-    }
-    // Removes a skill from the user's skill list
-    const handleRemoveSkill = async (skillId) => {
-        if (!userId) {
-            return
-        }
-
-        try {
-            await deleteSkill(userId, skillId)
-
-            setSkills(
-                skills.filter((skill) => skill.id !== skillId)
-            )
-        } catch (error) {
-            console.error('Error deleting skill:', error)
-        }
-    }
-
-    return (
-        <main>
-            <h1>My Skills</h1>
-
-            <button
-                type="button"
-                onClick={() => setShowAddForm(true)}
-            >
-                Add Skill
-            </button>
-            {showAddForm && (
-                <div>
-                    <h2>Add New Skill</h2>
-
-                    <SkillForm
-                        skill={newSkill}
-                        setSkill={setNewSkill}
-                        error={addError}
-                        onSubmit={handleAddSkill}
-                        onCancel={() => {
-                            setShowAddForm(false)
-                            setAddError('')
-                        }}
-                        submitLabel="Save Skill"
-                    />
-                </div>
-            )}
-
-            <h2>Skill Portfolio</h2>
-
-            {skills.map((skill) => (
-                <div key={skill.id}>
-                    {editingSkillId === skill.id ? (
-                        <div>
-                            <h3>Edit Skill</h3>
-                            <SkillForm
-                                skill={editSkill}
-                                setSkill={setEditSkill}
-                                error={editError}
-                                onSubmit={handleSaveEdit}
-                                onCancel={() => {
-                                    setEditingSkillId(null)
-                                    setEditError('')
-                                }}
-                                submitLabel="Save Changes"
-                            />
-
-
-                        </div>
-                    ) : (
-                        <div>
-                            <h3>{skill.title}</h3>
-
-                            <p>
-                                <strong>Description:</strong> {skill.description}
-                            </p>
-
-                            <p>
-                                <strong>Category:</strong> {skill.category}
-                            </p>
-
-                            <p>
-                                <strong>Tags:</strong> {skill.tags}
-                            </p>
-
-                            <p>
-                                <strong>Experience Level:</strong> {skill.experienceLevel}
-                            </p>
-
-                            <p>
-                                <strong>Format:</strong> {skill.format}
-                            </p>
-
-                            <p>
-                                <strong>Language:</strong> {skill.language}
-                            </p>
-
-                            <p>
-                                <strong>Location:</strong> {skill.location}
-                            </p>
-
-                            <p>
-                                <strong>Listing Type:</strong> {skill.listingType}
-                            </p>
-
-                            <button
-                                type="button"
-                                onClick={() => handleEditSkill(skill)}
-                            >
-                                Edit
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(skill.id)}
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    )}
-                </div>
-            ))}
-        </main>
-    )
+  return (
+    <main id="main-content" className="community-page" tabIndex={-1}>
+      <div className="page-heading"><div><p className="eyebrow">A little knowledge goes a long way</p><h1>My skills</h1><p>Share what you know. Explore what you could learn.</p></div><button ref={addButton} className="primary-button" disabled={loading || busy || !userId} onClick={event => openEditor(null, event.currentTarget)}>Add a skill</button></div>
+      <p role="status" className={message ? 'notice success' : 'sr-only'}>{message}</p>
+      {error && <p ref={errorRef} role="alert" tabIndex={-1} className="notice error">{error}</p>}
+      {loading ? <p role="status" className="panel">Loading your skills…</p> : userId && <>
+        {editor && <section className="panel skill-editor" aria-labelledby="editor-title"><h2 id="editor-title">{editor === 'new' ? 'Add a skill' : 'Edit your skill'}</h2><p className="form-intro">Help someone find their next learning moment. Keep contact details and exact addresses private.</p><SkillForm key={editor} skill={draft} setSkill={setDraft} onSubmit={save} onCancel={() => { setError(''); closeEditor() }} busy={busy} submitLabel={editor === 'new' ? 'Save skill' : 'Save changes'} /></section>}
+        <section aria-labelledby="portfolio-title"><div className="section-heading"><div><h2 id="portfolio-title">Your portfolio <span className="count">{skills.length}</span></h2><p>Your listings also appear on your profile.</p></div><Link className="text-link" to="/profile">View my profile →</Link></div>
+          {skills.length ? <div className="skills-grid">{skills.map(skill => <SkillCard key={skill.id} skill={skill}>
+            {removing === skill.id ? <div className="remove-confirmation"><p id={`remove-${skill.id}`}>Remove “{skill.title}” from your portfolio?</p><button autoFocus className="danger-button" disabled={busy} aria-describedby={`remove-${skill.id}`} onClick={() => remove(skill)}>{busy ? 'Removing…' : 'Yes, remove'}</button><button disabled={busy} onClick={() => { setRemoving(null); requestAnimationFrame(() => document.getElementById(`remove-button-${skill.id}`)?.focus()) }}>Keep skill</button></div> : <><button disabled={busy} aria-label={`Edit ${skill.title}`} onClick={event => openEditor(skill, event.currentTarget)}>Edit</button><button id={`remove-button-${skill.id}`} className="text-button" disabled={busy} aria-label={`Remove ${skill.title}`} onClick={() => { setRemoving(skill.id); setMessage('') }}>Remove</button></>}
+          </SkillCard>)}</div> : <div className="panel empty-state"><span className="empty-icon" aria-hidden="true">✦</span><h3>You know something worth sharing</h3><p>From baking to coding, every skill has a place here.<br />Add your first listing to get started.</p><button className="primary-button" disabled={busy} onClick={event => openEditor(null, event.currentTarget)}>Add your first skill</button></div>}
+        </section>
+      </>}
+    </main>
+  )
 }
-
-export default SkillManagementPage

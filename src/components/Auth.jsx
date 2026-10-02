@@ -5,6 +5,7 @@ import { supabase } from '../utils/supabaseClient';
 import Register from './Register';
 import Footer from './Footer';
 import './Auth.css';
+import skillSwapLogo from '../assets/skillswap-logo.png';
 
 export default function Auth({ children, onAuthSuccess }) {
   const navigate = useNavigate();
@@ -118,8 +119,12 @@ export default function Auth({ children, onAuthSuccess }) {
 
     return (
       <div className="auth-authenticated-container">
+        <a className="skip-link" href="#main-content">Skip to main content</a>
         <header className="auth-session-bar">
-          <nav className="auth-session-nav">
+          <Link to="/profile" className="community-brand" aria-label="SkillSwap — my profile">
+            <img src={skillSwapLogo} alt="" width="2048" height="1118" className="community-logo" />
+          </Link>
+          <nav className="auth-session-nav" aria-label="Main navigation">
             <Link to="/search" className="auth-nav-link">
               Search
             </Link>
@@ -188,6 +193,7 @@ export default function Auth({ children, onAuthSuccess }) {
           />
         ) : (
           <div className="auth-container">
+            <img src={skillSwapLogo} alt="Skill Swap — Learn, Share, Grow" width="2048" height="1118" className="auth-brand-logo" />
             <h2 className="auth-title">Sign In</h2>
 
             {errorMessage && <div className="auth-alert-error">{errorMessage}</div>}

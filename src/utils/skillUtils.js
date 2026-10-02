@@ -84,7 +84,7 @@ export const prepareSkillForSave = (skill) => ({
     category: skill.category.trim(),
     listingType: skill.listingType.trim(),
     tags: skill.tags,
-    experienceLevel: skill.experienceLevel.trim(),
+    experienceLevel: (skill.experienceLevel || '').trim(),
     format: skill.format.trim(),
     language: skill.language.trim(),
     location: formatGeneralLocation(skill.location),

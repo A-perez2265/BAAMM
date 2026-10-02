@@ -17,6 +17,7 @@ function App() {
           <Route path="/" element={<SkillManagementPage />} />
           
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:profileId" element={<ProfilePage />} />
           <Route path="/skills" element={<SkillManagementPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/request" element={<RequestExchangePage />} />

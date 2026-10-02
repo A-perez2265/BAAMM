@@ -4,7 +4,7 @@ import { supabase } from '../utils/supabaseClient'
 export async function getSkills(userId) {
   const { data, error } = await supabase
     .from('skills')
-    .select('*')
+    .select('id, user_id, title, description, category, listing_type, tags, experience_level, format, language, location, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
@@ -80,13 +80,15 @@ export async function updateSkill(userId, skillId, skill) {
 
 // Deletes an existing skill belonging to a specific user
 export async function deleteSkill(userId, skillId) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('skills')
     .delete()
     .eq('id', skillId)
     .eq('user_id', userId)
+    .select('id')
 
   if (error) {
     throw error
   }
+  if (!data?.length) throw new Error('Skill was not removed. Check ownership and permissions.')
 }

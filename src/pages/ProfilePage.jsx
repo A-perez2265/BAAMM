@@ -1,257 +1,113 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import { getSkills } from '../services/skillService'
+import { getProfile, saveProfile } from '../services/profileService'
+import { emptyProfile, formatProfile, prepareProfile, validateProfile } from '../utils/profileUtils'
+import { formatSkillFromDatabase } from '../utils/skillUtils'
+import SkillCard from '../components/skills/SkillCard'
 
-function ProfilePage() {
-  // Saved profile information currently displayed to the user
-  const [profile, setProfile] = useState({
-    displayName: '',
-    username: '',
-    bio: '',
-    location: '',
-  })
-  // Stores skills belonging to the signed-in user
+export default function ProfilePage() {
+  const { profileId } = useParams()
+  const [profile, setProfile] = useState(emptyProfile)
   const [skills, setSkills] = useState([])
-
-  // Temporary copy used while the user edits their profile
-  const [editProfile, setEditProfile] = useState(profile)
-
-  // Controls whether the page is in view mode or edit mode
-  const [isEditing, setIsEditing] = useState(false)
-
-  // Stores profile validation errors
-  const [error, setError] = useState('')
-
-  // Stores the ID of the currently signed-in user
+  const [draft, setDraft] = useState(emptyProfile)
   const [userId, setUserId] = useState(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const editButton = useRef(null)
+  const errorRef = useRef(null)
+  const isOwner = Boolean(userId && (!profileId || profileId === userId))
 
-
-  // Gets the currently signed-in user
   useEffect(() => {
-    const loadUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
-
-      if (error) {
-        console.error('Error loading user:', error)
-        return
-      }
-
-      if (user) {
-        setUserId(user.id)
-      }
-    }
-
-    loadUser()
-  }, [])
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!userId) {
-        return
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        console.error('Error loading profile:', error)
-        return
-      }
-
-      setProfile({
-        displayName: data.display_name || '',
-        username: data.username || '',
-        bio: data.bio || '',
-        location: data.location || '',
-      })
-    }
-
-    loadProfile()
-  }, [userId])
-  // Loads skills belonging to the signed-in user
-  useEffect(() => {
-    const loadSkills = async () => {
-      if (!userId) {
-        return
-      }
-
+    let active = true
+    async function load() {
+      setLoading(true)
+      setUserId(null)
+      setError('')
+      setMessage('')
+      setIsEditing(false)
       try {
-        const skillData = await getSkills(userId)
-        setSkills(skillData)
-      } catch (error) {
-        console.error('Error loading user skills:', error)
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+        if (authError) throw authError
+        if (!user) throw new Error('Sign in to view profiles.')
+        const id = profileId || user.id
+        const [savedProfile, savedSkills] = await Promise.all([getProfile(id), getSkills(id)])
+        if (active) {
+          setUserId(user.id)
+          setProfile(formatProfile(savedProfile))
+          setSkills(savedSkills.map(formatSkillFromDatabase))
+        }
+      } catch {
+        if (active) setError('Unable to load this profile. Please refresh to try again.')
+      } finally {
+        if (active) setLoading(false)
       }
     }
+    load()
+    return () => { active = false }
+  }, [profileId])
 
-    loadSkills()
-  }, [userId])
-
-  // Opens edit mode and copies the current saved profile
-  const handleEdit = () => {
-    setEditProfile(profile)
-    setError('')
-    setIsEditing(true)
+  function showError(text) {
+    setError(text)
+    requestAnimationFrame(() => errorRef.current?.focus())
   }
-
-  // Saves the temporary edits to the main profile
-  const handleSave = () => {
-    const displayName = editProfile.displayName.trim()
-    const username = editProfile.username.trim()
-    const location = editProfile.location.trim()
-
-    if (!displayName || !username || !location) {
-      setError('Display name, username, and location are required.')
-      return
-    }
-
-    if (username.includes(' ')) {
-      setError('Username cannot contain spaces.')
-      return
-    }
-
-    setProfile({
-      ...editProfile,
-      displayName,
-      username,
-      location,
-    })
-
-    setError('')
+  function closeEditor() {
     setIsEditing(false)
+    requestAnimationFrame(() => editButton.current?.focus())
   }
-
-  // Discards any unsaved changes
-  const handleCancel = () => {
-    setEditProfile(profile)
+  async function handleSave(event) {
+    event.preventDefault()
+    if (saving || !isOwner) return
+    const prepared = prepareProfile(draft)
+    const validationError = validateProfile(prepared)
+    if (validationError) { showError(validationError); return }
+    setSaving(true)
     setError('')
-    setIsEditing(false)
+    setMessage('')
+    try {
+      const saved = await saveProfile(userId, prepared)
+      setProfile(formatProfile(saved))
+      setMessage('Profile saved. Your changes are now visible on your profile.')
+      closeEditor()
+    } catch (saveError) {
+      showError(saveError.code === '23505'
+        ? 'That username is already taken. Try another one.'
+        : 'Your profile could not be saved. Your edits are still here; please try again.')
+    } finally { setSaving(false) }
   }
 
+  const initials = profile.displayName.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || 'SS'
   return (
-    <main>
-      <h1>User Profile</h1>
-
-      {isEditing ? (
-        <div>
-          <label>
-            Display Name:
-            <input
-              type="text"
-              value={editProfile.displayName}
-              onChange={(event) =>
-                setEditProfile({
-                  ...editProfile,
-                  displayName: event.target.value,
-                })
-              }
-            />
-          </label>
-
-          <br />
-
-          <label>
-            Username:
-            <input
-              type="text"
-              value={editProfile.username}
-              onChange={(event) =>
-                setEditProfile({
-                  ...editProfile,
-                  username: event.target.value,
-                })
-              }
-            />
-          </label>
-
-          <br />
-
-          <label>
-            Bio:
-            <textarea
-              value={editProfile.bio}
-              onChange={(event) =>
-                setEditProfile({
-                  ...editProfile,
-                  bio: event.target.value,
-                })
-              }
-            />
-          </label>
-
-          <br />
-
-          <label>
-            Location:
-            <input
-              type="text"
-              value={editProfile.location}
-              onChange={(event) =>
-                setEditProfile({
-                  ...editProfile,
-                  location: event.target.value,
-                })
-              }
-            />
-          </label>
-
-          <br />
-
-          {/* Display error message if there is an error*/}
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-
-          {/* // Buttons to save or cancel edits */}
-          <button onClick={handleSave}>
-            Save Profile
-          </button>
-
-          <button onClick={handleCancel}>
-            Cancel
-          </button>
-        </div>
-      ) : (
-        <div>
-          <p>
-            <strong>Display Name:</strong> {profile.displayName}
-          </p>
-
-          <p>
-            <strong>Username:</strong> {profile.username}
-          </p>
-
-          <p>
-            <strong>Bio:</strong> {profile.bio}
-          </p>
-
-          <p>
-            <strong>Location:</strong> {profile.location}
-          </p>
-
-          <button onClick={handleEdit}>
-            Edit Profile
-          </button>
-        </div>
-      )}
-
-      <h2>Skills</h2>
-
-      {skills.length === 0 ? (
-        <p>No skills added yet.</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {skills.map((skill) => (
-            <li key={skill.id}>
-              {skill.title}
-            </li>
-          ))}
-        </ul>
+    <main id="main-content" className="community-page" tabIndex={-1}>
+      <div className="page-heading"><div><p className="eyebrow">Your community, your skills</p><h1>{profileId && !isOwner ? 'Member profile' : 'My profile'}</h1><p>A little about you. A lot you can share.</p></div></div>
+      <p role="status" className={message ? 'notice success' : 'sr-only'}>{message}</p>
+      {error && <p ref={errorRef} tabIndex={-1} role="alert" className="notice error">{error}</p>}
+      {loading ? <p role="status" className="panel">Loading profile…</p> : userId && (
+        <>
+          <section className="panel profile-panel" aria-label="Profile details">
+            {isEditing ? (
+              <form onSubmit={handleSave} aria-busy={saving}>
+                <h2>Edit profile</h2><p className="form-intro">These details appear on your public profile. Keep contact details and exact addresses private.</p>
+                <fieldset disabled={saving} className="form-grid">
+                  <legend className="sr-only">Public profile information</legend>
+                  <label>Display name <span className="required-note">(required)</span><input autoFocus required maxLength={80} autoComplete="nickname" value={draft.displayName} onChange={event => setDraft({ ...draft, displayName: event.target.value })} /></label>
+                  <label>Username <span className="required-note">(required)</span><input required minLength={3} maxLength={30} autoCapitalize="none" spellCheck={false} aria-describedby="username-help" value={draft.username} onChange={event => setDraft({ ...draft, username: event.target.value })} /><span id="username-help" className="field-help">3–30 letters, numbers, periods, hyphens, or underscores.</span></label>
+                  <label className="full-width">Bio<textarea maxLength={500} rows={4} aria-describedby="bio-help" value={draft.bio} onChange={event => setDraft({ ...draft, bio: event.target.value })} /><span id="bio-help" className="field-help">Share your interests and what you enjoy teaching. Up to 500 characters.</span></label>
+                  <label className="full-width">City, state/region <span className="required-note">(required)</span><input required placeholder="San Antonio, TX" aria-describedby="location-help" value={draft.location} onChange={event => setDraft({ ...draft, location: event.target.value })} /><span id="location-help" className="field-help">Use a broad area. Leave out your street address and live location.</span></label>
+                </fieldset>
+                <div className="form-actions"><button className="primary-button" disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button><button type="button" disabled={saving} onClick={() => { setError(''); closeEditor() }}>Cancel</button></div>
+              </form>
+            ) : (
+              <><div className="profile-header"><div className="avatar" aria-hidden="true">{initials}</div><div className="profile-identity"><h2>{profile.displayName || 'Make yourself at home'}</h2>{profile.username && <p>@{profile.username}</p>}{profile.location && <p className="profile-location">{profile.location}</p>}</div>{isOwner && <button ref={editButton} onClick={() => { setDraft(profile); setError(''); setMessage(''); setIsEditing(true) }}>Edit profile</button>}</div><div className="profile-bio"><h3>About</h3><p>{profile.bio || 'A little introduction goes a long way. Add a bio to help the community get to know you.'}</p></div></>
+            )}
+          </section>
+          <section aria-labelledby="profile-skills-title"><div className="section-heading"><div><h2 id="profile-skills-title">Skill portfolio</h2><p>Knowledge worth sharing. Something new to learn.</p></div>{isOwner && <Link className="button-link" to="/skills">Manage skills</Link>}</div>{skills.length ? <div className="skills-grid">{skills.map(skill => <SkillCard key={skill.id} skill={skill} />)}</div> : <div className="panel empty-state"><h3>Every skill starts somewhere</h3><p>{isOwner ? 'Add your first skill to let others know what you can share.' : 'This member has not listed any skills yet.'}</p>{isOwner && <Link className="button-link" to="/skills">Add your first skill</Link>}</div>}</section>
+        </>
       )}
     </main>
   )
 }
-
-export default ProfilePage
