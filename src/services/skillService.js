@@ -1,4 +1,6 @@
+import { assertPublicFields } from '../utils/publicTextPrivacy'
 import { supabase } from '../utils/supabaseClient'
+import { parseTags } from '../utils/skillUtils'
 
 // Retrieves all skills belonging to a specific user
 export async function getSkills(userId) {
@@ -17,6 +19,7 @@ export async function getSkills(userId) {
 
 // Adds a new skill for a specific user
 export async function addSkill(userId, skill) {
+  assertPublicFields(skill)
   const { data, error } = await supabase
     .from('skills')
     .insert({
@@ -25,12 +28,7 @@ export async function addSkill(userId, skill) {
       description: skill.description.trim(),
       category: skill.category.trim(),
       listing_type: skill.listingType,
-      tags: skill.tags
-        ? skill.tags
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-        : null,
+      tags: parseTags(skill.tags),
       experience_level: skill.experienceLevel?.trim() || null,
       format: skill.format.trim(),
       language: skill.language.trim(),
@@ -48,6 +46,7 @@ export async function addSkill(userId, skill) {
 
 // Updates an existing skill belonging to a specific user
 export async function updateSkill(userId, skillId, skill) {
+  assertPublicFields(skill)
   const { data, error } = await supabase
     .from('skills')
     .update({
@@ -55,12 +54,7 @@ export async function updateSkill(userId, skillId, skill) {
       description: skill.description.trim(),
       category: skill.category.trim(),
       listing_type: skill.listingType,
-      tags: skill.tags
-        ? skill.tags
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-        : null,
+      tags: parseTags(skill.tags),
       experience_level: skill.experienceLevel?.trim() || null,
       format: skill.format.trim(),
       language: skill.language.trim(),

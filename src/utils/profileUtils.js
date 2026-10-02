@@ -1,17 +1,18 @@
-import { isValidGeneralLocation, formatGeneralLocation } from './skillUtils'
+import { validatePublicFields } from './publicTextPrivacy'
+import { isValidGeneralLocation, formatGeneralLocation, capitalizeSentences } from './skillUtils'
 
 export const emptyProfile = { displayName: '', username: '', bio: '', location: '' }
 export const formatProfile = (profile) => ({
   displayName: profile.display_name || '',
   username: profile.username || '',
-  bio: profile.bio || '',
+  bio: capitalizeSentences(profile.bio || ''),
   location: profile.location || '',
 })
 export function prepareProfile(profile) {
   return {
     displayName: profile.displayName.trim(),
     username: profile.username.trim(),
-    bio: profile.bio.trim(),
+    bio: capitalizeSentences(profile.bio.trim()),
     location: formatGeneralLocation(profile.location),
   }
 }
@@ -28,5 +29,5 @@ export function validateProfile(profile) {
   if (!isValidGeneralLocation(profile.location)) {
     return 'Enter only a city and state/region, such as San Antonio, TX.'
   }
-  return ''
+  return validatePublicFields({ 'Display name': profile.displayName, Username: profile.username, Bio: profile.bio, Location: profile.location })
 }

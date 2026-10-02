@@ -1,11 +1,11 @@
 // src/components/Auth.jsx
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import Register from './Register';
 import Footer from './Footer';
 import './Auth.css';
-import skillSwapLogo from '../assets/skillswap-logo.png';
+import BrandLogo from './BrandLogo';
 
 export default function Auth({ children, onAuthSuccess }) {
   const navigate = useNavigate();
@@ -40,6 +40,11 @@ export default function Auth({ children, onAuthSuccess }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setCheckingSession(false);
+
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password', { replace: true });
+        return;
+      }
 
       if (event === 'SIGNED_OUT') {
         resetForm();
@@ -122,27 +127,27 @@ export default function Auth({ children, onAuthSuccess }) {
         <a className="skip-link" href="#main-content">Skip to main content</a>
         <header className="auth-session-bar">
           <Link to="/profile" className="community-brand" aria-label="SkillSwap — my profile">
-            <img src={skillSwapLogo} alt="" width="2048" height="1118" className="community-logo" />
+            <BrandLogo variant="header" decorative />
           </Link>
           <nav className="auth-session-nav" aria-label="Main navigation">
-            <Link to="/search" className="auth-nav-link">
+            <NavLink to="/search" className="auth-nav-link">
               Search
-            </Link>
-            <Link to="/request" className="auth-nav-link">
+            </NavLink>
+            <NavLink to="/request" className="auth-nav-link">
               Request
-            </Link>
-            <Link to="/incoming" className="auth-nav-link">
+            </NavLink>
+            <NavLink to="/incoming" className="auth-nav-link">
               Incoming
-            </Link>
-            <Link to="/confirm" className="auth-nav-link">
+            </NavLink>
+            <NavLink to="/confirm" className="auth-nav-link">
               Confirm
-            </Link>
-            <Link to="/skills" className="auth-nav-link">
+            </NavLink>
+            <NavLink to="/skills" className="auth-nav-link">
               My Skills
-            </Link>
-            <Link to="/profile" className="auth-nav-link">
+            </NavLink>
+            <NavLink to="/profile" className="auth-nav-link">
               Profile
-            </Link>
+            </NavLink>
           </nav>
 
           <div className="auth-user-info">
@@ -193,7 +198,7 @@ export default function Auth({ children, onAuthSuccess }) {
           />
         ) : (
           <div className="auth-container">
-            <img src={skillSwapLogo} alt="Skill Swap — Learn, Share, Grow" width="2048" height="1118" className="auth-brand-logo" />
+            <BrandLogo />
             <h2 className="auth-title">Sign In</h2>
 
             {errorMessage && <div className="auth-alert-error">{errorMessage}</div>}
@@ -201,8 +206,10 @@ export default function Auth({ children, onAuthSuccess }) {
 
             <form onSubmit={handleSubmit} className="auth-form">
               <div className="auth-form-group">
-                <label className="auth-label">Email Address</label>
+                <label className="auth-label" htmlFor="login-email">Email Address</label>
                 <input
+                  id="login-email"
+                  autoComplete="email"
                   type="email"
                   required
                   className="auth-input"
@@ -213,8 +220,10 @@ export default function Auth({ children, onAuthSuccess }) {
               </div>
 
               <div className="auth-form-group">
-                <label className="auth-label">Password</label>
+                <label className="auth-label" htmlFor="login-password">Password</label>
                 <input
+                  id="login-password"
+                  autoComplete="current-password"
                   type="password"
                   required
                   minLength={6}
@@ -229,6 +238,8 @@ export default function Auth({ children, onAuthSuccess }) {
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
+
+            <p className="auth-toggle-container"><Link to="/forgot-password">Forgot password?</Link></p>
 
             <div className="auth-toggle-container">
               <p>
