@@ -1,0 +1,58 @@
+.confirm-exchanges {
+  text-align: left;
+  padding: 24px 20px 48px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.confirm-exchanges-feed {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirm-exchanges-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--bg);
+}
+
+.confirm-exchanges-card h2 {
+  margin: 0 0 8px;
+}
+
+.confirm-exchanges-card p {
+  margin: 0 0 8px;
+}
+
+.confirm-exchanges-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.confirm-exchanges button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.confirm-exchanges button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-exchanges-error {
+  color: #ef4444;
+}
+
+.confirm-exchanges-success {
+  color: #16a34a;
+}

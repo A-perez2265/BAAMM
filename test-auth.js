@@ -1,3 +1,4 @@
+/* global process */
 // test-auth.js
 import { createClient } from '@supabase/supabase-js';
 
