@@ -2,9 +2,11 @@ import React from 'react';
 
 export default function Alerts() {
   return (
-    <section style={{ padding: '16px', border: '1px solid #333', borderRadius: '8px', backgroundColor: '#1a1a1a' }}>
-      <h2 style={{ marginTop: 0, borderBottom: '1px solid #333', paddingBottom: '8px', fontSize: '18px' }}>Alerts</h2>
-      <p style={{ margin: 0, fontSize: '13px', color: '#aaa' }}>No urgent alerts right now.</p>
+    <section style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: '700' }}>Alerts</h3>
+      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', fontSize: '13px', color: '#64748b' }}>
+        No urgent alerts right now.
+      </div>
     </section>
   );
 }
