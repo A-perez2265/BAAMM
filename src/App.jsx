@@ -8,7 +8,7 @@ import ConfirmExchangesPage from './pages/ConfirmExchangesPage'
 import AdminDashboard from './pages/AdminDashboard'
 import Auth from './components/Auth'
 import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
-import DashboardPage from './pages/DashboardPage' // 👈 Added Dashboard import
+import DashboardPage from './pages/DashboardPage'
 
 function App() {
   return (

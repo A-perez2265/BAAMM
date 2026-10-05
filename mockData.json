@@ -1,0 +1,138 @@
+{
+  "predefinedTags": [
+    { "id": "tag-1", "name": "Python", "category": "Programming & Tech", "isPopular": true },
+    { "id": "tag-2", "name": "Web Development", "category": "Programming & Tech", "isPopular": true },
+    { "id": "tag-3", "name": "Data Structures", "category": "Programming & Tech", "isPopular": false },
+    { "id": "tag-4", "name": "Spanish Conversation", "category": "Languages", "isPopular": true },
+    { "id": "tag-5", "name": "French Basics", "category": "Languages", "isPopular": false },
+    { "id": "tag-6", "name": "Acoustic Guitar", "category": "Music & Arts", "isPopular": true },
+    { "id": "tag-7", "name": "Digital Illustration", "category": "Design & Arts", "isPopular": false },
+    { "id": "tag-8", "name": "Ceramics & Pottery", "category": "Handicrafts", "isPopular": true },
+    { "id": "tag-9", "name": "Public Speaking", "category": "Personal Development", "isPopular": false },
+    { "id": "tag-10", "name": "Yoga & Mobility", "category": "Fitness & Health", "isPopular": true }
+  ],
+
+  "currentUser": {
+    "id": "usr-current",
+    "name": "Alex Mercer",
+    "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Alex",
+    "isLoggedIn": true,
+    "credits": 2,
+    "isVerified": true,
+    "skillsOffered": ["tag-1", "tag-2"],
+    "skillsDesired": ["tag-4", "tag-6"]
+  },
+
+  "guestUser": {
+    "id": "usr-guest",
+    "isLoggedIn": false,
+    "skillsOffered": [],
+    "skillsDesired": []
+  },
+
+  "emptySkillsUser": {
+    "id": "usr-empty",
+    "name": "Jordan Lee",
+    "isLoggedIn": true,
+    "skillsOffered": [],
+    "skillsDesired": ["tag-1"]
+  },
+
+  "listings": [
+    {
+      "id": "list-1",
+      "type": "teach",
+      "userId": "usr-101",
+      "userName": "Elena Rostova",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena",
+      "isVerified": true,
+      "skillTitle": "Conversational Spanish & Grammar Essentials",
+      "description": "Native speaker offering casual conversational practice, pronunciation drills, and grammar foundations.",
+      "category": "Languages",
+      "tagIds": ["tag-4"],
+      "experienceLevel": "Advanced",
+      "modality": "Remote",
+      "language": "Spanish",
+      "location": { "city": "Online", "distanceMiles": 0 },
+      "rating": 4.9,
+      "tradesCompleted": 14,
+      "wantsInReturnTagIds": ["tag-1", "tag-10"]
+    },
+    {
+      "id": "list-2",
+      "type": "teach",
+      "userId": "usr-102",
+      "userName": "Marcus Chen",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus",
+      "isVerified": true,
+      "skillTitle": "Beginner Fingerstyle Acoustic Guitar",
+      "description": "Learn basic chord transitions, fingerpicking patterns, and rhythm fundamentals for beginner players.",
+      "category": "Music & Arts",
+      "tagIds": ["tag-6"],
+      "experienceLevel": "Intermediate",
+      "modality": "In-Person",
+      "language": "English",
+      "location": { "city": "Austin, TX", "distanceMiles": 4.5 },
+      "rating": 4.7,
+      "tradesCompleted": 8,
+      "wantsInReturnTagIds": ["tag-7", "tag-8"]
+    },
+    {
+      "id": "list-3",
+      "type": "teach",
+      "userId": "usr-103",
+      "userName": "Sarah Jenkins",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+      "isVerified": false,
+      "skillTitle": "Practical Wheel Throwing & Glazing Basics",
+      "description": "Studio sessions covering wedging clay, centering on the pottery wheel, and glazing techniques.",
+      "category": "Handicrafts",
+      "tagIds": ["tag-8"],
+      "experienceLevel": "Beginner",
+      "modality": "In-Person",
+      "language": "English",
+      "location": { "city": "Austin, TX", "distanceMiles": 12.0 },
+      "rating": 5.0,
+      "tradesCompleted": 3,
+      "wantsInReturnTagIds": ["tag-2", "tag-4"]
+    },
+    {
+      "id": "list-4",
+      "type": "learn",
+      "userId": "usr-104",
+      "userName": "Devon Miller",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Devon",
+      "isVerified": true,
+      "skillTitle": "Looking for Help: Object-Oriented Python Fundamentals",
+      "description": "Working on personal scripting projects and need a mentor to explain classes, inheritance, and clean code.",
+      "category": "Programming & Tech",
+      "tagIds": ["tag-1"],
+      "experienceLevel": "Beginner",
+      "modality": "Remote",
+      "language": "English",
+      "location": { "city": "Online", "distanceMiles": 0 },
+      "rating": 4.8,
+      "tradesCompleted": 5,
+      "wantsInReturnTagIds": []
+    },
+    {
+      "id": "list-5",
+      "type": "learn",
+      "userId": "usr-105",
+      "userName": "Chloe Davis",
+      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Chloe",
+      "isVerified": true,
+      "skillTitle": "Seeking French Accent Coaching",
+      "description": "Preparing for a summer exchange program; looking for weekly pronunciation review.",
+      "category": "Languages",
+      "tagIds": ["tag-5"],
+      "experienceLevel": "Intermediate",
+      "modality": "Remote",
+      "language": "French",
+      "location": { "city": "Online", "distanceMiles": 0 },
+      "rating": 4.6,
+      "tradesCompleted": 2,
+      "wantsInReturnTagIds": []
+    }
+  ]
+}
