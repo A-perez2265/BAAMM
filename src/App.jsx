@@ -5,6 +5,7 @@ import SearchPage from './pages/SearchPage'
 import RequestExchangePage from './pages/RequestExchangePage'
 import IncomingRequestsPage from './pages/IncomingRequestsPage'
 import ConfirmExchangesPage from './pages/ConfirmExchangesPage'
+import DashboardPage from './pages/DashboardPage'
 import AdminDashboard from './pages/AdminDashboard'
 import Auth from './components/Auth'
 import PasswordRecoveryPage from './pages/PasswordRecoveryPage'
@@ -18,8 +19,7 @@ function App() {
         <Route path="*" element={
           <Auth>
             <Routes>
-              {/* Default home page */}
-              <Route path="/" element={<SkillManagementPage />} />
+              <Route path="/" element={<DashboardPage />} />
 
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:profileId" element={<ProfilePage />} />

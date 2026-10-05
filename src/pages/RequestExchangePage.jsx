@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import {
   createExchangeRequest,
@@ -8,6 +9,8 @@ import {
 import './RequestExchangePage.css'
 
 function RequestExchangePage() {
+  const [searchParams] = useSearchParams()
+  const requestedSkillId = searchParams.get('skill')
   const [userId, setUserId] = useState(null)
   const [credits, setCredits] = useState(null)
   const [skills, setSkills] = useState([])
@@ -49,6 +52,27 @@ function RequestExchangePage() {
 
     load()
   }, [])
+
+  useEffect(() => {
+    if (!requestedSkillId || skills.length === 0) {
+      return
+    }
+
+    const match = skills.some((skill) => skill.id === requestedSkillId)
+    if (match) {
+      setOpenSkillId(requestedSkillId)
+    }
+  }, [requestedSkillId, skills])
+
+  useEffect(() => {
+    if (!openSkillId) {
+      return
+    }
+
+    document
+      .getElementById(`skill-${openSkillId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [openSkillId])
 
   const openRequestForm = (skillId) => {
     setError('')
@@ -101,7 +125,7 @@ function RequestExchangePage() {
 
       <ul className="request-exchange-feed">
         {skills.map((skill) => (
-          <li key={skill.id} className="request-exchange-card">
+          <li id={`skill-${skill.id}`} key={skill.id} className="request-exchange-card">
             <h2>{skill.title}</h2>
             <p>{skill.description}</p>
             <p>

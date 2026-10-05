@@ -126,10 +126,13 @@ export default function Auth({ children, onAuthSuccess }) {
       <div className="auth-authenticated-container">
         <a className="skip-link" href="#main-content">Skip to main content</a>
         <header className="auth-session-bar">
-          <Link to="/profile" className="community-brand" aria-label="SkillSwap — my profile">
+          <Link to="/" className="community-brand" aria-label="SkillSwap — dashboard">
             <BrandLogo variant="header" decorative />
           </Link>
           <nav className="auth-session-nav" aria-label="Main navigation">
+            <NavLink to="/" className="auth-nav-link" end>
+              Dashboard
+            </NavLink>
             <NavLink to="/search" className="auth-nav-link">
               Search
             </NavLink>
