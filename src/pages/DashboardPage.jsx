@@ -18,6 +18,10 @@ function personLabel(profile) {
   return profile?.display_name || profile?.username || 'Someone'
 }
 
+function formatLabel(item) {
+  return item?.skill?.format || item?.format || ''
+}
+
 function skillTitle(item) {
   return item.skill?.title || item.title || 'a skill'
 }
@@ -40,6 +44,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('')
   const [actionId, setActionId] = useState(null)
   const [userId, setUserId] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
@@ -50,10 +55,12 @@ export default function DashboardPage() {
 
       if (userError) {
         setError(userError.message)
+        setLoading(false)
         return
       }
 
       if (!user) {
+        setLoading(false)
         return
       }
 
@@ -103,7 +110,7 @@ export default function DashboardPage() {
         setIncoming(pending)
         setExchanges(active)
         setListings(
-          skills.slice(0, 3).map((skill) => ({
+          skills.slice(0, 5).map((skill) => ({
             ...skill,
             teacher: teachersById[skill.user_id] ?? null,
           }))
@@ -111,6 +118,8 @@ export default function DashboardPage() {
         setError('')
       } catch (loadError) {
         setError(loadError.message)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -189,8 +198,9 @@ export default function DashboardPage() {
             Welcome back, {displayName}!
           </h2>
           <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
-            Open your exchange pages from these tiles. Credits move when a learner
-            confirms.
+            {loading
+              ? 'Loading your exchanges…'
+              : 'Open your exchange pages from these tiles. Credits move when a learner confirms.'}
           </p>
         </div>
         <div
@@ -248,10 +258,14 @@ export default function DashboardPage() {
                 marginBottom: '12px',
               }}
             >
-              {incoming.length} Pending
+              {loading ? '…' : incoming.length} Pending
             </span>
 
-            {incoming.length === 0 ? (
+            {loading ? (
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                Loading incoming requests…
+              </p>
+            ) : incoming.length === 0 ? (
               <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
                 No pending requests for your teacher listings.
               </p>
@@ -278,6 +292,8 @@ export default function DashboardPage() {
                       </h4>
                       <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#64748b' }}>
                         Requested by <strong>{personLabel(req.learner)}</strong>
+                        {' • 1 Credit'}
+                        {formatLabel(req) ? ` (${formatLabel(req)})` : ''}
                       </p>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -335,7 +351,11 @@ export default function DashboardPage() {
                 Confirm lessons →
               </Link>
             </div>
-            {exchanges.length === 0 ? (
+            {loading ? (
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                Loading active exchanges…
+              </p>
+            ) : exchanges.length === 0 ? (
               <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
                 No open exchanges yet. Request a skill or wait for an incoming
                 request.
@@ -445,7 +465,11 @@ export default function DashboardPage() {
                 Browse all →
               </Link>
             </div>
-            {listings.length === 0 ? (
+            {loading ? (
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                Loading teacher listings…
+              </p>
+            ) : listings.length === 0 ? (
               <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
                 No other teacher listings yet.
               </p>

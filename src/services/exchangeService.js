@@ -95,7 +95,7 @@ async function withSkillAndLearner(exchanges) {
 
   const [{ data: skills }, { data: profiles }] = await Promise.all([
     skillIds.length
-      ? supabase.from('skills').select('id, title, category').in('id', skillIds)
+      ? supabase.from('skills').select('id, title, category, format').in('id', skillIds)
       : Promise.resolve({ data: [] }),
     supabase
       .from('profiles')
