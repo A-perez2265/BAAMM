@@ -25,9 +25,34 @@
   font: inherit;
 }
 
+.search-bar__field {
+  position: relative;
+}
+
 .search-bar__input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.search-bar__suggestions {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.35rem 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.search-bar__suggestion {
+  padding: 0.5rem 1rem;
+  color: var(--text-h);
 }
 
 .search-bar__status {
