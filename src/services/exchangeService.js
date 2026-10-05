@@ -118,6 +118,44 @@ async function withSkillAndLearner(exchanges) {
   }))
 }
 
+export async function getActiveExchangesForUser(userId) {
+  const { data: exchanges, error } = await supabase
+    .from('exchanges')
+    .select('*')
+    .or(`learner_id.eq.${userId},teacher_id.eq.${userId}`)
+    .in('status', [
+      EXCHANGE_STATUS.PENDING,
+      EXCHANGE_STATUS.ACCEPTED,
+      EXCHANGE_STATUS.SESSION_COMPLETED,
+      EXCHANGE_STATUS.AWAITING_CONFIRMATION,
+    ])
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return withSkillAndLearner(exchanges)
+}
+
+export async function getCompletedCreditCounts(userId) {
+  const { data, error } = await supabase
+    .from('exchanges')
+    .select('learner_id, teacher_id')
+    .eq('status', EXCHANGE_STATUS.COMPLETED)
+
+  if (error) {
+    throw error
+  }
+
+  const rows = data ?? []
+
+  return {
+    earned: rows.filter((row) => row.teacher_id === userId).length,
+    spent: rows.filter((row) => row.learner_id === userId).length,
+  }
+}
+
 export async function getIncomingPendingRequests(teacherId) {
   const { data: exchanges, error } = await supabase
     .from('exchanges')
