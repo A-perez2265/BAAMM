@@ -1,32 +1,178 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabaseClient';
 import ActivityFeed from '../components/ActivityFeed';
 import Alerts from '../components/Alerts';
+import logoImg from '../assets/skillswap-logo-sans.png'; // 👈 Import your SkillSwap logo
 
 export default function DashboardPage() {
-  const [user] = useState({
-    name: "User 101",
-    username: "@user101",
-    creditBalance: 12,
-    earnedCredits: 20,
-    spentCredits: 8
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState({
+    name: "Loading...",
+    username: "",
+    creditBalance: 0,
+    earnedCredits: 0,
+    spentCredits: 0
   });
 
-  const [exchanges] = useState([
-    { id: 1, title: "Python Basics", role: "Teacher", partner: "Alex", status: "Pending", category: "Programming" },
-    { id: 2, title: "UI/UX Design", role: "Learner", partner: "Sarah", status: "Accepted", category: "Art & Design" },
-    { id: 3, title: "SQL Database Setup", role: "Teacher", partner: "Dave", status: "Completed", category: "Database" }
-  ]);
+  const [exchanges, setExchanges] = useState([]);
+  const [incomingRequests, setIncomingRequests] = useState([]);
+  const [teacherListings, setTeacherListings] = useState([]);
 
-  // Teammate's Exchange Engine Data: Incoming Requests
-  const [incomingRequests] = useState([
-    { id: 201, skill: "Python Basics", requester: "Jordan M.", credits: 1, type: "In Person" }
-  ]);
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  // Teammate's Exchange Engine Data: Featured Teacher Listings
-  const [teacherListings] = useState([
-    { id: 301, title: "Mixed Martial Arts", teacher: "AugustineP", credits: 1, category: "Fitness & Wellness", level: "Advanced", mode: "In Person", location: "San Antonio, TX" },
-    { id: 302, title: "Programmer Tutoring", teacher: "AugustineP", credits: 1, category: "Technology", level: "Intermediate", mode: "Online", location: "San Antonio, TX" }
-  ]);
+  async function fetchDashboardData() {
+    try {
+      setLoading(true);
+
+      // 1. Get current authenticated user
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) return;
+
+      const userId = authUser.id;
+
+      // 2. Fetch User Profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, username, credits_balance')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        setCurrentUser({
+          name: profile.display_name || "User",
+          username: profile.username ? `@${profile.username}` : "",
+          creditBalance: Math.round(profile.credits_balance || 0),
+          earnedCredits: 0, // Calculated from completed teacher exchanges
+          spentCredits: 0   // Calculated from completed learner exchanges
+        });
+      }
+
+      // 3. Fetch Incoming Requests (Exchanges with status 'pending' where user is teacher)
+      const { data: reqData } = await supabase
+        .from('exchanges')
+        .select(`
+          id,
+          proposal_message,
+          skills ( title, format ),
+          learner:profiles!exchanges_learner_id_fkey ( display_name )
+        `)
+        .eq('teacher_id', userId)
+        .eq('status', 'pending');
+
+      if (reqData) {
+        setIncomingRequests(
+          reqData.map((item) => ({
+            id: item.id,
+            skill: item.skills?.title || "Skill Exchange",
+            requester: item.learner?.display_name || "Community Member",
+            credits: 1,
+            type: item.skills?.format || "In Person"
+          }))
+        );
+      }
+
+      // 4. Fetch Active Exchanges
+      const { data: exData } = await supabase
+        .from('exchanges')
+        .select(`
+          id,
+          status,
+          teacher_id,
+          learner_id,
+          skills ( title, category ),
+          teacher:profiles!exchanges_teacher_id_fkey ( display_name ),
+          learner:profiles!exchanges_learner_id_fkey ( display_name )
+        `)
+        .or(`teacher_id.eq.${userId},learner_id.eq.${userId}`)
+        .limit(10);
+
+      if (exData) {
+        setExchanges(
+          exData.map((ex) => {
+            const isTeacher = ex.teacher_id === userId;
+            return {
+              id: ex.id,
+              title: ex.skills?.title || "Skill Exchange",
+              role: isTeacher ? "Teacher" : "Learner",
+              partner: isTeacher ? ex.learner?.display_name : ex.teacher?.display_name,
+              status: ex.status ? ex.status.charAt(0).toUpperCase() + ex.status.slice(1) : "Pending",
+              category: ex.skills?.category || "General"
+            };
+          })
+        );
+      }
+
+      // 5. Fetch Posted Teacher Skill Listings
+      const { data: skillData } = await supabase
+        .from('skills')
+        .select(`
+          id,
+          title,
+          category,
+          experience_level,
+          format,
+          location,
+          profiles ( display_name, username )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (skillData) {
+        setTeacherListings(
+          skillData.map((s) => ({
+            id: s.id,
+            title: s.title,
+            teacher: s.profiles?.display_name || "Instructor",
+            credits: 1,
+            category: s.category || "General",
+            level: s.experience_level || "Intermediate",
+            mode: s.format || "Online",
+            location: s.location || "Remote"
+          }))
+        );
+      }
+
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Action: Accept Request
+  const handleAcceptRequest = async (id) => {
+    const { error } = await supabase
+      .from('exchanges')
+      .update({ status: 'accepted' })
+      .eq('id', id);
+
+    if (!error) {
+      setIncomingRequests((prev) => prev.filter((r) => r.id !== id));
+      fetchDashboardData();
+    }
+  };
+
+  // Action: Decline Request
+  const handleDeclineRequest = async (id) => {
+    const { error } = await supabase
+      .from('exchanges')
+      .update({ status: 'declined' })
+      .eq('id', id);
+
+    if (!error) {
+      setIncomingRequests((prev) => prev.filter((r) => r.id !== id));
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
 
   return (
     <div style={{ backgroundColor: '#f4f5f8', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif', color: '#1e293b', textAlign: 'left' }}>
@@ -35,7 +181,7 @@ export default function DashboardPage() {
       <header style={{
         backgroundColor: '#ffffff',
         borderBottom: '1px solid #e2e8f0',
-        padding: '12px 32px',
+        padding: '10px 32px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -43,18 +189,31 @@ export default function DashboardPage() {
         top: 0,
         zIndex: 10
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>⚡</div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.5px', color: '#000000' }}>SKILL SWAP</h1>
-            <p style={{ margin: 0, fontSize: '9px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>LEARN • SHARE • GROW</p>
-          </div>
+        {/* Logo Section */}
+        <div 
+          onClick={() => navigate('/')} 
+          style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+        >
+          <img 
+            src={logoImg} 
+            alt="SkillSwap Logo" 
+            style={{ height: '42px', width: 'auto', objectFit: 'contain' }} 
+          />
         </div>
 
+        {/* Cross-Team Route Navigation */}
         <nav style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
-          {['Dashboard', 'Search', 'Request', 'Incoming', 'Confirm', 'My Skills'].map((tab) => (
+          {[
+            { label: 'Dashboard', path: '/' },
+            { label: 'Search', path: '/search' },
+            { label: 'Request', path: '/request' },
+            { label: 'Incoming', path: '/incoming' },
+            { label: 'Confirm', path: '/confirm' },
+            { label: 'My Skills', path: '/skills' }
+          ].map((tab) => (
             <button
-              key={tab}
+              key={tab.label}
+              onClick={() => navigate(tab.path)}
               style={{
                 border: 'none',
                 padding: '6px 14px',
@@ -62,25 +221,25 @@ export default function DashboardPage() {
                 fontSize: '13px',
                 fontWeight: '600',
                 cursor: 'pointer',
-                backgroundColor: tab === 'Dashboard' ? '#fde8ef' : 'transparent',
-                color: tab === 'Dashboard' ? '#803b4e' : '#64748b'
+                backgroundColor: tab.label === 'Dashboard' ? '#fde8ef' : 'transparent',
+                color: tab.label === 'Dashboard' ? '#803b4e' : '#64748b'
               }}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px' }}>
-          <span style={{ color: '#64748b' }}>Signed in as <strong style={{ color: '#000000' }}>{user.name}</strong> <span style={{ color: '#94a3b8' }}>{user.username}</span></span>
-          <button style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Sign Out</button>
+          <span style={{ color: '#64748b' }}>Signed in as <strong style={{ color: '#000000' }}>{currentUser.name}</strong> <span style={{ color: '#94a3b8' }}>{currentUser.username}</span></span>
+          <button onClick={handleSignOut} style={{ border: '1px solid #cbd5e1', background: '#fff', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', color: '#475569' }}>Sign Out</button>
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Content Area */}
       <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 20px' }}>
         
-        {/* Hero Header */}
+        {/* Welcome Header */}
         <div style={{
           backgroundColor: '#ffffff',
           borderRadius: '16px',
@@ -93,7 +252,7 @@ export default function DashboardPage() {
         }}>
           <div>
             <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#000000' }}>
-              Welcome back, {user.name}! 👋
+              Welcome back, {currentUser.name}! 👋
             </h2>
             <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '14px' }}>
               Track your active skill exchanges, incoming requests, and credit breakdown
@@ -111,18 +270,18 @@ export default function DashboardPage() {
               Available Balance
             </span>
             <div style={{ fontSize: '24px', fontWeight: '800', color: '#803b4e', marginTop: '2px' }}>
-              {Math.round(user.creditBalance)} <span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}>Credits</span>
+              {currentUser.creditBalance} <span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}>Credits</span>
             </div>
           </div>
         </div>
 
-        {/* Two-Column Grid */}
+        {/* Two Column Layout */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
           
           {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
-            {/* Incoming Requests Widget */}
+            {/* Incoming Requests */}
             <section style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#000000' }}>Incoming Requests</h3>
@@ -132,18 +291,18 @@ export default function DashboardPage() {
               </div>
 
               {incomingRequests.length === 0 ? (
-                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Accept or decline pending requests for your teacher listings. No pending requests right now.</p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>No pending requests right now.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {incomingRequests.map((req) => (
                     <div key={req.id} style={{ padding: '16px', border: '1px solid #f1f5f9', borderRadius: '12px', backgroundColor: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: '#000000' }}>{req.skill}</h4>
-                        <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#64748b' }}>Requested by <strong>{req.requester}</strong> • {Math.round(req.credits)} Credit ({req.type})</p>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#64748b' }}>Requested by <strong>{req.requester}</strong> • {req.credits} Credit ({req.type})</p>
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Accept</button>
-                        <button style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Decline</button>
+                        <button onClick={() => handleAcceptRequest(req.id)} style={{ backgroundColor: '#16a34a', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Accept</button>
+                        <button onClick={() => handleDeclineRequest(req.id)} style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>Decline</button>
                       </div>
                     </div>
                   ))}
@@ -151,7 +310,7 @@ export default function DashboardPage() {
               )}
             </section>
 
-            {/* Active Exchanges Section */}
+            {/* Active Exchanges */}
             <section style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#000000' }}>Active Exchanges</h3>
@@ -160,54 +319,56 @@ export default function DashboardPage() {
                 </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {exchanges.map((ex) => (
-                  <div key={ex.id} style={{
-                    padding: '16px',
-                    border: '1px solid #f1f5f9',
-                    borderRadius: '12px',
-                    backgroundColor: '#ffffff',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                    textAlign: 'left'
-                  }}>
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>{ex.category}</span>
-                        <span style={{
-                          fontSize: '11px',
-                          padding: '2px 8px',
-                          borderRadius: '10px',
-                          fontWeight: '600',
-                          backgroundColor: ex.role === 'Teacher' ? '#fde8ef' : '#e0f2fe',
-                          color: ex.role === 'Teacher' ? '#803b4e' : '#0369a1'
-                        }}>
-                          {ex.role}
-                        </span>
-                      </div>
-                      <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#000000', textAlign: 'left' }}>{ex.title}</h4>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b', textAlign: 'left' }}>Partner: <strong>{ex.partner}</strong></p>
-                    </div>
-
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      fontWeight: '700',
-                      backgroundColor: ex.status === 'Pending' ? '#fef3c7' : ex.status === 'Accepted' ? '#dbeafe' : '#dcfce7',
-                      color: ex.status === 'Pending' ? '#b45309' : ex.status === 'Accepted' ? '#1d4ed8' : '#15803d',
-                      whiteSpace: 'nowrap'
+              {exchanges.length === 0 ? (
+                <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>No active exchanges currently.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {exchanges.map((ex) => (
+                    <div key={ex.id} style={{
+                      padding: '16px',
+                      border: '1px solid #f1f5f9',
+                      borderRadius: '12px',
+                      backgroundColor: '#ffffff',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
                     }}>
-                      {ex.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '500' }}>{ex.category}</span>
+                          <span style={{
+                            fontSize: '11px',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontWeight: '600',
+                            backgroundColor: ex.role === 'Teacher' ? '#fde8ef' : '#e0f2fe',
+                            color: ex.role === 'Teacher' ? '#803b4e' : '#0369a1'
+                          }}>
+                            {ex.role}
+                          </span>
+                        </div>
+                        <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#000000' }}>{ex.title}</h4>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#64748b' }}>Partner: <strong>{ex.partner}</strong></p>
+                      </div>
+
+                      <span style={{
+                        fontSize: '12px',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        backgroundColor: ex.status === 'Pending' ? '#fef3c7' : ex.status === 'Accepted' ? '#dbeafe' : '#dcfce7',
+                        color: ex.status === 'Pending' ? '#b45309' : ex.status === 'Accepted' ? '#1d4ed8' : '#15803d'
+                      }}>
+                        {ex.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
-            {/* Teacher Listings Widget */}
+            {/* Teacher Listings Feed */}
             <section style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div>
@@ -225,10 +386,10 @@ export default function DashboardPage() {
                         <p style={{ margin: '4px 0', fontSize: '12px', color: '#64748b' }}>{listing.category} • {listing.level} • {listing.mode} • {listing.location}</p>
                       </div>
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#803b4e', backgroundColor: '#fde8ef', padding: '4px 8px', borderRadius: '6px' }}>
-                        {Math.round(listing.credits)} Credit
+                        {listing.credits} Credit
                       </span>
                     </div>
-                    <button style={{ marginTop: '10px', backgroundColor: '#803b4e', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                    <button onClick={() => navigate('/request')} style={{ marginTop: '10px', backgroundColor: '#803b4e', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }}>
                       Request Exchange
                     </button>
                   </div>
@@ -249,11 +410,11 @@ export default function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ padding: '12px 16px', borderRadius: '10px', backgroundColor: '#f0fdf4', border: '1px solid #dcfce7', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '11px', color: '#15803d', textTransform: 'uppercase', fontWeight: '700' }}>Earned (Teaching)</span>
-                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#16a34a' }}>+{Math.round(user.earnedCredits)} credits</span>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#16a34a' }}>+{currentUser.earnedCredits} credits</span>
                 </div>
                 <div style={{ padding: '12px 16px', borderRadius: '10px', backgroundColor: '#fef2f2', border: '1px solid #fee2e2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '11px', color: '#b91c1c', textTransform: 'uppercase', fontWeight: '700' }}>Spent (Learning)</span>
-                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#dc2626' }}>-{Math.round(user.spentCredits)} credits</span>
+                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#dc2626' }}>-{currentUser.spentCredits} credits</span>
                 </div>
               </div>
             </section>
