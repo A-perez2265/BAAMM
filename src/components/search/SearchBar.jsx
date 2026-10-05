@@ -4,8 +4,7 @@ import './SearchBar.css';
 
 const popularTags = mockData.predefinedTags.filter((tag) => tag.isPopular);
 
-function SearchBar() {
-  const [query, setQuery] = useState('');
+function SearchBar({ query, onQueryChange }) {
   const [isFocused, setIsFocused] = useState(false);
 
   const showSuggestedTags = isFocused && query.trim() === '';
@@ -22,7 +21,7 @@ function SearchBar() {
           className="search-bar__input"
           placeholder="Search skills..."
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => onQueryChange(event.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           autoComplete="off"
