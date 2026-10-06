@@ -14,7 +14,14 @@ function RequestExchangePage() {
   const [userId, setUserId] = useState(null)
   const [credits, setCredits] = useState(null)
   const [skills, setSkills] = useState([])
-  const [openSkillId, setOpenSkillId] = useState(null)
+  const [selection, setSelection] = useState(null)
+  const selectedSkillId = selection?.requestedSkillId === requestedSkillId
+    ? selection.id
+    : requestedSkillId
+  const openSkillId = skills.some((skill) => skill.id === selectedSkillId)
+    ? selectedSkillId
+    : null
+  const setOpenSkillId = (id) => setSelection({ requestedSkillId, id })
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -52,17 +59,6 @@ function RequestExchangePage() {
 
     load()
   }, [])
-
-  useEffect(() => {
-    if (!requestedSkillId || skills.length === 0) {
-      return
-    }
-
-    const match = skills.some((skill) => skill.id === requestedSkillId)
-    if (match) {
-      setOpenSkillId(requestedSkillId)
-    }
-  }, [requestedSkillId, skills])
 
   useEffect(() => {
     if (!openSkillId) {

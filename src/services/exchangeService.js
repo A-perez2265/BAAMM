@@ -254,59 +254,15 @@ export async function getAwaitingLearnerConfirmation(learnerId) {
   return withSkillAndLearner(exchanges)
 }
 
-export async function confirmExchange({ exchangeId, learnerId }) {
-  const runComplete = () =>
-    supabase.rpc('complete_exchange', {
-      p_exchange_id: exchangeId,
-      p_credit_amount: 1,
-    })
+export async function confirmExchange({ exchangeId }) {
+  // The database validates the learner and transfers both balances atomically.
+  const { data, error } = await supabase.rpc('confirm_skill_exchange', {
+    p_exchange_id: exchangeId,
+  })
 
-  let { data, error } = await runComplete()
-
-  if (error?.message?.toLowerCase().includes('confirmable status')) {
-    const { error: statusError } = await supabase
-      .from('exchanges')
-      .update({
-        status: EXCHANGE_STATUS.ACCEPTED,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', exchangeId)
-      .eq('learner_id', learnerId)
-
-    if (statusError) {
-      throw statusError
-    }
-
-    ;({ data, error } = await runComplete())
-  }
-
-  if (!error) {
-    return data
-  }
-
-  const rpcMissing =
-    error.code === 'PGRST202' ||
-    error.message?.toLowerCase().includes('could not find the function')
-
-  if (!rpcMissing) {
+  if (error) {
     throw error
   }
 
-  const { data: updated, error: updateError } = await supabase
-    .from('exchanges')
-    .update({
-      status: EXCHANGE_STATUS.COMPLETED,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', exchangeId)
-    .eq('learner_id', learnerId)
-    .eq('status', EXCHANGE_STATUS.AWAITING_CONFIRMATION)
-    .select()
-    .single()
-
-  if (updateError) {
-    throw updateError
-  }
-
-  return updated
+  return data
 }
