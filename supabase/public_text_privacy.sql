@@ -28,9 +28,10 @@ begin
     content := regexp_replace(content, '\s*\(at\)\s*', '@', 'gi');
     content := regexp_replace(content, '\s*\(dot\)\s*', '.', 'gi');
     if content ~* '[a-z0-9.!$%&''*+/=?^_`{|}~-]+\s*@\s*[a-z0-9-]+(\s*\.\s*[a-z0-9-]+)+'
-      or content ~* '(^|[^a-z0-9])(\+?[0-9][[:space:]().-]*){7,15}($|[^a-z0-9])'
-      or content ~* '\m[0-9]+[a-z]?\s+([a-z0-9.''-]+\s+){0,6}(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|circle|cir|way|parkway|pkwy|terrace|ter|trail|trl|place|pl|highway|hwy)\M'
-      or content ~* '\m(p\.?\s*o\.?|post office)\s*box\s*[0-9]+'
+      or content ~* '(\+?[0-9][[:space:]().-]*){7,}'
+      or content ~* '[0-9]+[a-z]?\s+([a-z0-9.''-]+\s+){0,6}(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|circle|cir|way|parkway|pkwy|terrace|ter|trail|trl|place|pl|highway|hwy)\M'
+      or content ~* '[0-9]+[a-z]?\s*[a-z[:space:].''-]{1,100}(street|avenue|road|drive|lane|boulevard|court|circle|parkway|terrace|trail|place|highway)'
+      or content ~* '(p\.?\s*o\.?|post office)\s*box\s*[0-9]+'
     then
       raise exception using errcode = '23514', message = 'PUBLIC_CONTACT_DETAILS: Remove email addresses, phone numbers, and street addresses from public details.';
     end if;

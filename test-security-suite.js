@@ -331,7 +331,7 @@ async function testSEC04() {
 
 /**
  * SEC-05: RPC Concurrency & Double-Spend Defense
- * Simulate parallel requests against complete_exchange RPC using Promise.all()
+ * Simulate parallel requests against confirm_skill_exchange RPC using Promise.all()
  * to prove that PostgreSQL's FOR UPDATE lock guarantees atomicity.
  */
 async function testSEC05() {
@@ -380,11 +380,11 @@ async function testSEC05() {
   }
 
   console.log(`  Test exchange created (ID: ${exchange.id}, Status: ${exchange.status}).`);
-  console.log('  Firing 5 concurrent complete_exchange RPC calls via Promise.all()...');
+  console.log('  Firing 5 concurrent confirm_skill_exchange RPC calls via Promise.all()...');
 
   const CONCURRENCY_COUNT = 5;
   const calls = Array.from({ length: CONCURRENCY_COUNT }).map(() =>
-    clientA.rpc('complete_exchange', { p_exchange_id: exchange.id })
+    clientA.rpc('confirm_skill_exchange', { p_exchange_id: exchange.id })
   );
 
   const settled = await Promise.allSettled(calls);
@@ -601,7 +601,7 @@ async function runSuite() {
     console.error(`\n${RED}[SUITE EXECUTION ERROR]${RESET} ${err.message}`);
     console.error(err.stack);
     console.log(`\n${YELLOW}NOTE: If tables or columns are reported missing, run the SQL script in`);
-    console.log(`'supabase/disputes_and_verification.sql' inside your Supabase SQL Editor.${RESET}\n`);
+    console.log(`'supabase/disputes_and_verification.sql' and 'supabase/confirm_skill_exchange.sql' inside your Supabase SQL Editor.${RESET}\n`);
     process.exit(1);
   }
 }

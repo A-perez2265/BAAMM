@@ -22,6 +22,8 @@ try {
   const { containsContactDetails } = await server.ssrLoadModule('/src/utils/publicTextPrivacy.js')
   for (const text of ['a@example.com', 'a [at] example [dot] com', '(210) 555-0199', '+44 20 7946 0958', '123 Main Street', 'PO Box 123', '１２３ Main Street', '#210 #555 #0199']) assert.equal(containsContactDetails(text), true, text)
   for (const text of ['San Antonio, TX', 'Learn Python 3.12', 'Bake at 350 degrees for 20 minutes', '7 years of experience', 'Main Street photography']) assert.equal(containsContactDetails(text), false, text)
+  for (const text of ['call2105550123now', 'abc210-555-0123xyz', 'phone1234567890123456end', 'abc123 Main Streetxyz', '123MainStreet', 'abc123MainStreetxyz', '123 Main St', 'mailPOBox123now']) assert.equal(containsContactDetails(text), true, text)
+  for (const text of ['CS101 programming', '3D printing', 'Python 3 basics', '123 Mainstream concepts']) assert.equal(containsContactDetails(text), false, text)
   const { prepareProfile, validateProfile } = await server.ssrLoadModule('/src/utils/profileUtils.js')
   const { getProfile, saveProfile } = await server.ssrLoadModule('/src/services/profileService.js')
   const { getSkills, addSkill, updateSkill, deleteSkill } = await server.ssrLoadModule('/src/services/skillService.js')
@@ -46,6 +48,8 @@ try {
   response = { data: { id: 'owner', display_name: 'Mallory' }, error: null }
   calls = []
   await assert.rejects(saveProfile('owner', { ...profile, bio: 'Call 210-555-0199' }), /Remove email/)
+  await assert.rejects(saveProfile('owner', { ...profile, bio: 'call2105550123now' }), /Remove email/)
+  await assert.rejects(saveProfile('owner', { ...profile, bio: 'abc123MainStreetxyz' }), /Remove email/)
   assert.equal(calls.length, 0)
   const saved = await saveProfile('owner', { ...profile, is_admin: true, credits: 999 })
   assert.equal(saved.display_name, 'Mallory')

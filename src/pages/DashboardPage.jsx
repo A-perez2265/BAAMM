@@ -146,6 +146,7 @@ export default function DashboardPage() {
       })
 
       setIncoming((current) => current.filter((item) => item.id !== request.id))
+      setExchanges((current) => current.filter((item) => item.id !== request.id))
 
       if (nextStatus === EXCHANGE_STATUS.ACCEPTED) {
         setExchanges((current) => [

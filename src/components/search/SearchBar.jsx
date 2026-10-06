@@ -14,7 +14,13 @@ function SearchBar({ query, onQueryChange }) {
       <label htmlFor="skill-search" className="search-bar__label">
         Search skills
       </label>
-      <div className="search-bar__field">
+      <div
+        className="search-bar__field"
+        onFocus={() => setIsFocused(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setIsFocused(false);
+        }}
+      >
         <input
           id="skill-search"
           type="text"
@@ -22,8 +28,6 @@ function SearchBar({ query, onQueryChange }) {
           placeholder="Search skills..."
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           autoComplete="off"
           aria-expanded={showSuggestedTags}
           aria-controls="search-suggested-tags"
@@ -32,13 +36,17 @@ function SearchBar({ query, onQueryChange }) {
           <ul
             id="search-suggested-tags"
             className="search-bar__suggestions"
-            role="listbox"
             aria-label="Popular tags"
-            onMouseDown={(event) => event.preventDefault()}
           >
             {popularTags.map((tag) => (
-              <li key={tag.id} className="search-bar__suggestion" role="option">
-                {tag.name}
+              <li key={tag.id}>
+                <button
+                  type="button"
+                  className="search-bar__suggestion"
+                  onClick={() => onQueryChange(tag.name)}
+                >
+                  {tag.name}
+                </button>
               </li>
             ))}
           </ul>

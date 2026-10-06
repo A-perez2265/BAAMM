@@ -57,8 +57,8 @@ function SearchPage() {
     <main className="search-page">
       <h1>Search</h1>
       <p>
-        Browse teacher listings. Type to filter. Request Exchange opens the
-        request page; auto-selecting the skill waits on that page’s next update.
+        Browse teacher listings. Type or choose a popular tag to filter, then
+        select Request Exchange to send a message about that skill.
       </p>
 
       <SearchBar query={query} onQueryChange={setQuery} />
