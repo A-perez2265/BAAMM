@@ -3,12 +3,16 @@ import { createServer } from 'vite'
 
 let response
 let calls = []
-const query = new Proxy({}, { get(_target, method) {
-  if (method === 'then') return (resolve) => resolve(response)
-  return (...args) => { calls.push([method, ...args]); return query }
-} })
+let tableResponses = {}
+function createQuery(table) {
+  const query = new Proxy({}, { get(_target, method) {
+    if (method === 'then') return (resolve) => resolve(tableResponses[table] ?? response)
+    return (...args) => { calls.push([method, ...args]); return query }
+  } })
+  return query
+}
 globalThis.__exchangeTestClient = {
-  from(table) { calls.push(['from', table]); return query },
+  from(table) { calls.push(['from', table]); return createQuery(table) },
   rpc(name, args) { calls.push(['rpc', name, args]); return Promise.resolve(response) },
 }
 const server = await createServer({
@@ -49,6 +53,19 @@ try {
   assert.deepEqual(calls.find(([method]) => method === 'insert')[1], {
     learner_id: 'learner', teacher_id: 'teacher', skill_id: 'guitar', message: 'Teach me chords', status: 'pending',
   })
+  assert.equal(calls.filter(([method]) => method === 'insert').length, 1)
+  assert.deepEqual(calls.filter(([method]) => method === 'eq'), [
+    ['eq', 'id', 'learner'], ['eq', 'id', 'guitar'],
+    ['eq', 'user_id', 'teacher'], ['eq', 'listing_type', 'Teacher'],
+  ])
+  calls = []
+  tableResponses = { skills: { data: null, error: null } }
+  await assert.rejects(exchange.createExchangeRequest(request), error => error.code === 'LISTING_UNAVAILABLE')
+  assert.equal(calls.some(([method]) => method === 'insert'), false)
+  tableResponses = { skills: { data: null, error: { message: 'Cannot verify listing' } } }
+  await assert.rejects(exchange.createExchangeRequest(request), error => error.message === 'Cannot verify listing')
+  assert.equal(calls.some(([method]) => method === 'insert'), false)
+  tableResponses = {}
   calls = []
   await exchange.respondToIncomingRequest({ exchangeId: 'request', teacherId: 'teacher', nextStatus: 'accepted' })
   assert.deepEqual(calls.filter(([method]) => method === 'eq'), [['eq', 'id', 'request'], ['eq', 'teacher_id', 'teacher'], ['eq', 'status', 'pending']])

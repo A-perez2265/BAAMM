@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
+import { useListingRefresh } from '../utils/useListingRefresh'
 import {
   createExchangeRequest,
   getCreditsBalance,
@@ -26,39 +27,50 @@ function RequestExchangePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingListings, setLoadingListings] = useState(true)
+  const [revision, refreshListings] = useListingRefresh()
 
   useEffect(() => {
+    let active = true
     const load = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        setError(userError.message)
-        return
-      }
-
-      if (!user) {
-        return
-      }
-
-      setUserId(user.id)
-
+      setLoadingListings(true)
+      setError('')
       try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+
+        if (!active) return
+
+        if (userError) {
+          setError(userError.message)
+          return
+        }
+
+        if (!user) {
+          return
+        }
+
+        setUserId(user.id)
+
         const [balance, listings] = await Promise.all([
           getCreditsBalance(user.id),
           getRequestableSkills(user.id),
         ])
+        if (!active) return
         setCredits(balance)
         setSkills(listings)
       } catch (loadError) {
-        setError(loadError.message)
+        if (active) setError(loadError.message)
+      } finally {
+        if (active) setLoadingListings(false)
       }
     }
 
     load()
-  }, [])
+    return () => { active = false }
+  }, [revision])
 
   useEffect(() => {
     if (!openSkillId) {
@@ -78,6 +90,7 @@ function RequestExchangePage() {
   }
 
   const handleRequest = async (skill) => {
+    if (loading || loadingListings || !userId) return
     setError('')
     setSuccess('')
 
@@ -100,6 +113,10 @@ function RequestExchangePage() {
       setMessage('')
       setOpenSkillId(null)
     } catch (submitError) {
+      if (submitError.code === 'LISTING_UNAVAILABLE') {
+        setSkills(current => current.filter(item => item.id !== skill.id))
+        setOpenSkillId(null)
+      }
       setError(submitError.message)
     } finally {
       setLoading(false)
@@ -111,11 +128,15 @@ function RequestExchangePage() {
       <h1>Teacher listings</h1>
       <p>Credits: {credits === null ? '…' : credits}</p>
       <p>Scroll posted teacher skills and request the one you want to learn.</p>
+      <button type="button" onClick={refreshListings} disabled={loadingListings || loading}>
+        Refresh listings
+      </button>
+      {loadingListings && <p>Loading listings…</p>}
 
       {error && <p className="request-exchange-error">{error}</p>}
       {success && <p className="request-exchange-success">{success}</p>}
 
-      {skills.length === 0 && (
+      {!loadingListings && !error && skills.length === 0 && (
         <p>No teacher listings from other users are available yet.</p>
       )}
 
@@ -146,7 +167,7 @@ function RequestExchangePage() {
                   <button
                     type="button"
                     onClick={() => handleRequest(skill)}
-                    disabled={loading || credits === 0}
+                    disabled={loading || loadingListings || credits === null || credits < 1}
                   >
                     {loading ? 'Sending…' : 'Send request'}
                   </button>
@@ -163,7 +184,7 @@ function RequestExchangePage() {
               <button
                 type="button"
                 onClick={() => openRequestForm(skill.id)}
-                disabled={credits === 0}
+                disabled={loading || loadingListings || credits === null || credits < 1}
               >
                 Request Exchange
               </button>

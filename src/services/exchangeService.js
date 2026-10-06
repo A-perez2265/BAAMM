@@ -58,6 +58,21 @@ export async function createExchangeRequest({
     throw new Error('You need at least 1 credit to request an exchange.')
   }
 
+  const { data: listing, error: listingError } = await supabase
+    .from('skills')
+    .select('id')
+    .eq('id', skillId)
+    .eq('user_id', teacherId)
+    .eq('listing_type', 'Teacher')
+    .maybeSingle()
+
+  if (listingError) throw listingError
+  if (!listing) {
+    const error = new Error('This teacher listing is no longer available. Refresh listings and choose another skill.')
+    error.code = 'LISTING_UNAVAILABLE'
+    throw error
+  }
+
   const { data, error } = await supabase
     .from('exchanges')
     .insert({

@@ -6,6 +6,7 @@ import {
   skillMatchesQuery,
 } from '../services/discoveryService'
 import { supabase } from '../utils/supabaseClient'
+import { useListingRefresh } from '../utils/useListingRefresh'
 import './SearchPage.css'
 
 function SearchPage() {
@@ -13,37 +14,44 @@ function SearchPage() {
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [revision, refreshListings] = useListingRefresh()
 
   useEffect(() => {
+    let active = true
     const load = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        setError(userError.message)
-        setLoading(false)
-        return
-      }
-
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
+      setLoading(true)
+      setError('')
       try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+
+        if (!active) return
+
+        if (userError) {
+          setError(userError.message)
+          setLoading(false)
+          return
+        }
+
+        if (!user) {
+          setLoading(false)
+          return
+        }
+
         const skills = await getDiscoverableSkills(user.id)
-        setListings(skills)
+        if (active) setListings(skills)
       } catch (loadError) {
-        setError(loadError.message)
+        if (active) setError(loadError.message)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
 
     load()
-  }, [])
+    return () => { active = false }
+  }, [revision])
 
   const results = useMemo(
     () => listings.filter((skill) => skillMatchesQuery(skill, query)),
@@ -62,6 +70,9 @@ function SearchPage() {
       </p>
 
       <SearchBar query={query} onQueryChange={setQuery} />
+      <button type="button" onClick={refreshListings} disabled={loading}>
+        Refresh listings
+      </button>
 
       {loading && <p>Loading listings…</p>}
       {error && <p className="search-page__error">{error}</p>}
