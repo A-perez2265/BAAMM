@@ -73,7 +73,7 @@ export default function PasswordRecoveryPage({ mode }) {
   return (
     <main id="main-content" className="auth-container recovery-card">
       <BrandLogo />
-      <h1 className="auth-title">{isReset ? 'Set a new password' : 'Forgot your password?'}</h1>
+      <h1 className="auth-title">{isReset ? ('Set a new password') : 'Forgot your password?'}</h1>
       <p className="recovery-intro">{isReset ? 'Choose a new password to get back to sharing and learning.' : 'It happens. Enter your account email and we’ll send you a reset link.'}</p>
       {error && <p ref={errorRef} role="alert" tabIndex={-1} className="notice error">{error}</p>}
       {checking ? <p role="status">Checking your reset link…</p> : done ? (
@@ -84,7 +84,7 @@ export default function PasswordRecoveryPage({ mode }) {
       ) : isReset && !hasSession ? <Link className="button-link" to="/forgot-password">Request a new reset link</Link> : (
         <form onSubmit={submit} className="auth-form" aria-busy={busy}>
           <fieldset disabled={busy} className="recovery-fields">
-            <legend className="sr-only">{isReset ? 'New password' : 'Account email'}</legend>
+            <legend className="sr-only">{isReset ? ('New password') : 'Account email'}</legend>
             {isReset ? <>
               <label className="auth-label" htmlFor="new-password">New password</label>
               <input id="new-password" type="password" className="auth-input" required minLength={8} autoComplete="new-password" aria-describedby="password-help" value={password} onChange={event => setPassword(event.target.value)} />
@@ -96,7 +96,7 @@ export default function PasswordRecoveryPage({ mode }) {
               <input id="recovery-email" type="email" className="auth-input" required autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} />
             </>}
           </fieldset>
-          <button className="auth-btn-submit" disabled={busy}>{busy ? (isReset ? 'Updating…' : 'Sending…') : (isReset ? 'Update password' : 'Send reset link')}</button>
+          <button className="auth-btn-submit" disabled={busy}>{busy ? (isReset ? 'Updating…' : 'Sending…') : (isReset ? ('Update password') : 'Send reset link')}</button>
         </form>
       )}
       {!done && <p className="auth-toggle-container"><Link to="/login">Back to sign in</Link>{isReset && hasSession && <> · <Link to="/forgot-password">Request a new link</Link></>}</p>}

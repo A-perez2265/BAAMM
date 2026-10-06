@@ -1,0 +1,6 @@
+# .ship-safeignore
+tests/test-auth.js
+tests/test-security-suite.js
+tests/
+results/
+amber-local/

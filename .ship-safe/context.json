@@ -1,0 +1,609 @@
+{
+  "version": "10.1.0",
+  "generatedAt": "2026-10-06T01:28:37.160Z",
+  "rootPath": "/Volumes/SSK SSD/senior project/project/BAAMM",
+  "recon": {
+    "frameworks": [
+      "vite"
+    ],
+    "languages": [
+      "javascript"
+    ],
+    "apiRoutes": [],
+    "authPatterns": [
+      "supabase-auth"
+    ],
+    "databases": [
+      "supabase"
+    ],
+    "cloudProviders": [],
+    "frontendExposure": [],
+    "packageManagers": [
+      "npm"
+    ],
+    "cicd": [],
+    "hasDockerfile": false,
+    "hasTerraform": false,
+    "hasKubernetes": false,
+    "envFiles": [
+      ".env.example"
+    ],
+    "configFiles": []
+  },
+  "fileIndex": {
+    ".env.example": {
+      "hash": "ca60d852395b509742f83296aaa7ad5157df88b653c4751fdc48f3242ae76052",
+      "size": 49,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    ".gitignore": {
+      "hash": "5af0e6dce712b60d8d61d92425df0065bb8b9a88ab446235ab799d38e25c1e9e",
+      "size": 274,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    ".npmrc": {
+      "hash": "5c6da0f1206fe71175ec9ba30706877837213156487309165ab9476877328aee",
+      "size": 45,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    ".ship-safeignore": {
+      "hash": "797fea5cb65d8042c469bcd319fceff631651da9a237172787726eeb4738fbda",
+      "size": 68,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "README.md": {
+      "hash": "291359806d0cf1780bf6f7ad85dcbebb14dc3e0a9aef632d9df319dfd5ce9447",
+      "size": 1852,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "eslint.config.js": {
+      "hash": "0197d9a843aaae267303c4d1ab1a43afad1afacc7646cdf6cf94a5af6b815fb8",
+      "size": 568,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "index.html": {
+      "hash": "6c81664329c2649cb779e441091fea39127058f3f84ca0e97a64a7995f4c2367",
+      "size": 357,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "mockData.json": {
+      "hash": "332afd3ad316ba3be9a4a716ca7e42ef0796d520260322c615effd5f0df29764",
+      "size": 5196,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "package.json": {
+      "hash": "9a530a8b08f1ac473f6e40f46e7c98c671737d46ca9a564d8a83881618437c81",
+      "size": 704,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "useDiscoveryEngine.js": {
+      "hash": "8f32de0f03d1689fb7375856b49125b918efb4659b632b7b8648b4feab011053",
+      "size": 3889,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "useDiscoveryState.js": {
+      "hash": "08392381e83cc9bc162dd84072fbc906dd6ca05ac3d3ec5cbfbe6936f0e5ab64",
+      "size": 837,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "vite.config.js": {
+      "hash": "e1eefd0ed1639c88d1213884ef760516884db9e168190e223fee6b063ad3e088",
+      "size": 161,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/App.css": {
+      "hash": "e448f72ef796eddaecc91bc91fdf2d9bcc7671ab8366873f781f5f0006b9672b",
+      "size": 2304,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/App.jsx": {
+      "hash": "b138573752632f41ec1a3dd2aa7296d9e9786188982c21db7e0e67621310ce96",
+      "size": 1789,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/index.css": {
+      "hash": "4ebca23bd302e87cc48bf6ab4dde0adb977e388e6a0c0aa28f3ef1c0647f5465",
+      "size": 17364,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/main.jsx": {
+      "hash": "e13c284ec03710580ea094f0489c7c0f02b5b6db8f0840449226f3d2aecf85d2",
+      "size": 331,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/admin_grant_credits.sql": {
+      "hash": "fa1ed8645cf1db328cd0440c189f51d9ba34e40ca21840e80e9732c02c0ad46b",
+      "size": 1145,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/dispute_actions.sql": {
+      "hash": "935412788b8e0e0b542f42a721896bc9167e1d7e0e74e28de3bf99ea37c51221",
+      "size": 985,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/disputes_and_verification.sql": {
+      "hash": "8da19bfee46cee772c657c58a8b1ec67d3c44c6536deb5c69535f0f3b319b819",
+      "size": 8151,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/exchanges.sql": {
+      "hash": "9f12f2a6370c27b665008798e39433502e394369a2a92d901e3ad5a6c9ce8eaa",
+      "size": 936,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/profile_avatars.sql": {
+      "hash": "b6c5b32c4bd730997863fadc94c5789b226b16ef939752a9f4cd125cdf4e2109",
+      "size": 732,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "supabase/public_text_privacy.sql": {
+      "hash": "fa4bda70403954ba622674faacb082fc55764a7fe8c6d6121c719cfa837efa39",
+      "size": 2456,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/constants/avatarOptions.js": {
+      "hash": "d6f7aec73e0a6bd1593f1718512bc237928ae7bd797dc3f4c955019b6586bf93",
+      "size": 4224,
+      "lastScanned": "2026-10-06T01:28:37.158Z"
+    },
+    "src/constants/exchangeStatus.js": {
+      "hash": "2b6597afc9a38b5abed094b7e8bd4e5b9860f40eacd1abc4ca8895e1bd8cc2dc",
+      "size": 693,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/constants/skillIcons.js": {
+      "hash": "184125ec85c71d0d3c8bc9695d1fd0d5329e06c166b2545e2319048323d1cdfc",
+      "size": 607,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/constants/skillOptions.js": {
+      "hash": "76bb2ca043cc5ba2a0b1c0e5590660ed6c84169464905f7a5f6733300f96fcef",
+      "size": 939,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/ActivityFeed.jsx": {
+      "hash": "3d5f8a7b208fe3bc58ef15f42b70c74bff2372924d718f31114db73a90a4d8d2",
+      "size": 2245,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Alerts.jsx": {
+      "hash": "0b5dd390fcf347b0e184fbaed81cb727b6419638d9cd26d579eeee8bdf5b7f84",
+      "size": 1238,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Auth.css": {
+      "hash": "20980bd97c50ca2a7cea7db788ddfd7b3f0c81778923abf3f2bf181f2deee19e",
+      "size": 4824,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Auth.jsx": {
+      "hash": "9468f46d78123d51ac829bad4ab50e2173198732c85f25ae536c8f1e5b1257e4",
+      "size": 8680,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/AvatarPicker.jsx": {
+      "hash": "5d5a35765da8d05f3a84f873729b9d80b075c2cb0e192afd0b7312d07a0cc83a",
+      "size": 1156,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/BrandLogo.jsx": {
+      "hash": "5ce1763281484c93f074fdc08c0959e37d3425a14e5b83170014d452826fb6d7",
+      "size": 524,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/CommunityIcon.jsx": {
+      "hash": "d15fd1fb6916c007b88a30b7e2823cbe23bab184328b9831ab47d5d83eb08a7c",
+      "size": 3306,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/DisputeModal.css": {
+      "hash": "fc7449db4893ea3e5b731f4583f644d524e8283ab1ad48b2230fcc8a94c3caa5",
+      "size": 5702,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/DisputeModal.jsx": {
+      "hash": "70b29995d5472513a946b8983235af2bb871bdf14d0efc6b12935d080cb0d403",
+      "size": 8731,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/ErrorBoundary.jsx": {
+      "hash": "67866e9f13622277b706ec95ffff154ba48889dd3b91bd82470490aafafff0df",
+      "size": 1878,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Footer.css": {
+      "hash": "04ba05e2801182ce7b4df245bcc660b7707c88b0bb6ed94f9331b59c2d9eb91a",
+      "size": 1042,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Footer.jsx": {
+      "hash": "630f4d2349457692e03ce11845fe176b1d7c81f8356ef82bed76bb89345faf8b",
+      "size": 645,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/ProfileAvatar.jsx": {
+      "hash": "0b57fd55f73cf07e57c1201e870d4b2516bcc4ac5d48525a14107a31993132a2",
+      "size": 1130,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Register.css": {
+      "hash": "bb8f6ea8d167a9aa97ff289f7a4d44f1de5d51edb0f3a5e83e3a81e842364679",
+      "size": 7651,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/components/Register.jsx": {
+      "hash": "a56ca3efb980ef01c8924086190d11da88dfadc28001fd7e99dbc0c5b8ffb76a",
+      "size": 19705,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/AdminDashboard.css": {
+      "hash": "2260558931b0cba18310e51e5fab20939aa03a93370e00910e46947a8f28bd77",
+      "size": 10660,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/AdminDashboard.jsx": {
+      "hash": "f00aef4e16ad2ccd96312bf6d8f8f600ba76f96af517e9d717b3a2ba938e6397",
+      "size": 19273,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/ConfirmExchangesPage.css": {
+      "hash": "cbcc9174111cbddb9582c064b6afb9b8de7104e0f2453322f6c578c733e236d8",
+      "size": 916,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/ConfirmExchangesPage.jsx": {
+      "hash": "59029a297c51d35aace25ce32f69b9beaa0034534cf675ec48ceb1c8b9191d11",
+      "size": 3871,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/DashboardPage.css": {
+      "hash": "6c3a7a5e2dad173c476340fbd94b9d8a960f119a153f6a0a7ccd06b771ec4a9e",
+      "size": 1122,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/DashboardPage.jsx": {
+      "hash": "454ca21f295988057d28934450e96a122eeb8c23acff536c1fc30244d8826286",
+      "size": 21418,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/IncomingRequestsPage.css": {
+      "hash": "a03d793f6490c1d5b5a75d8bd018541e82a6bfdad04c692378f0dc5503d2199b",
+      "size": 968,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/IncomingRequestsPage.jsx": {
+      "hash": "c276760c7f8a920d061d95eb075c5c8e9a03dbb13d12a221fb433af22c9e867a",
+      "size": 5409,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/PasswordRecoveryPage.jsx": {
+      "hash": "d25952b8ccd6c9add5b1331d0c479048786f3d979c33b5096b198f7ae6e47d30",
+      "size": 6207,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/ProfilePage.jsx": {
+      "hash": "d34363652ce8a1296b5704c3ffd9fda856d9c522f726bb31776c3f524ca61cea",
+      "size": 9575,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/RequestExchangePage.css": {
+      "hash": "d1642e611b9c6da66bd120b7751b7b9b77810607ab47c79133324c15d1aa7461",
+      "size": 1359,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/RequestExchangePage.jsx": {
+      "hash": "3d026205d551588709626b33146b8bec7949bc3d9648e4532984474338d05281",
+      "size": 5015,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/SearchPage.css": {
+      "hash": "37611df0df45444a8e30d7455cb74b4d8ba23300fb96b60fa53c5b99d73e821c",
+      "size": 939,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/SearchPage.jsx": {
+      "hash": "0b52303a811e4499516b59dc57b3b96699c7991a02225e62e8004e2ca3467e0a",
+      "size": 2984,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/pages/SkillManagementPage.jsx": {
+      "hash": "467eb76ebfe8c6c20b01dc3050ec83b63f4546ec30e3211e28be6a2ae51ac69a",
+      "size": 7640,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/services/discoveryService.js": {
+      "hash": "27415a9ff858549ce87ee83168ddc25773f3c62d39ddea7c8ebf6c70a3fd6f42",
+      "size": 929,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/services/exchangeService.js": {
+      "hash": "486d0ad62c719ba611ba50b9f289684317494f5be6ea569a1067293a2f93b07b",
+      "size": 7289,
+      "lastScanned": "2026-10-06T01:28:37.159Z"
+    },
+    "src/services/passwordRecoveryService.js": {
+      "hash": "b9d04ac8299dadf3515d2899218f67be915f0aeeb804955dd3bc8e8f5cfb394d",
+      "size": 762,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/services/profileService.js": {
+      "hash": "9fec2b9be98897e151b58c597841e18947a51e2bdb8ba4e695301f00827c6cf2",
+      "size": 2002,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/services/skillService.js": {
+      "hash": "470ac86ecff2cdcccd47cbe30ec8f7e1c43c2b009e2ae922bb6e3762a360f1b8",
+      "size": 2385,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/utils/profileUtils.js": {
+      "hash": "0472e9335b54a7368bf77ab76209d60d0969f7f11fab4911ffa2e53e9895a767",
+      "size": 1781,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/utils/publicTextPrivacy.js": {
+      "hash": "a2bbb591c949193eabcb70842c5a9900af0f67043b1f53a4449d37929cda3ddd",
+      "size": 1430,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/utils/skillUtils.js": {
+      "hash": "fb93d46e9d44a2f5adb6acde65a71250002fa409b3879d935d17a3892366e73e",
+      "size": 4005,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/utils/supabaseClient.js": {
+      "hash": "9b2247702bcf906c75ebb02f3252a9c05d9e20b7fb7e775cd8fe2dd0b72c9033",
+      "size": 409,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/components/search/SearchBar.css": {
+      "hash": "c606b9ad7af2713821490a9b47914db6361154bc1b98123b5c1c26724e57ecd4",
+      "size": 1051,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/components/search/SearchBar.jsx": {
+      "hash": "1ad5db7850d476a0f8569609e7b41c649097df101f03720ebffc250e029d51b1",
+      "size": 1675,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/components/skills/SkillCard.jsx": {
+      "hash": "495119ed6695c42f9748a3d921e2d90230d1103654938a63471def58ca101368",
+      "size": 1437,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/components/skills/SkillFilters.jsx": {
+      "hash": "313110b3388849938eecfe5eb82615a810dd234b765730617afa8c1974b748a1",
+      "size": 558,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    },
+    "src/components/skills/SkillForm.jsx": {
+      "hash": "b173d784f2115bfe9d5e59fc2a8982a8130c1c9774b23dde6a53f1df6e4f2839",
+      "size": 3114,
+      "lastScanned": "2026-10-06T01:28:37.160Z"
+    }
+  },
+  "lastFindings": {
+    "package.json": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "supply-chain",
+        "rule": "TYPOSQUAT_SUSPECT",
+        "title": "Possible Typosquat: \"vite\" (similar to \"vue\")",
+        "description": "Package \"vite\" is 2 character(s) away from popular package \"vue\". This could be a typosquatting attempt.",
+        "matched": "vite",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Verify this is the intended package. Did you mean \"vue\"?"
+      },
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "supply-chain",
+        "rule": "DEPCONF_NO_SCOPE_REGISTRY",
+        "title": "Scoped Packages Without Registry Pin: @vitejs",
+        "description": "Scoped packages (@vitejs) found without a .npmrc pinning the scope to a private registry. An attacker could claim the scope on the public npm registry.",
+        "matched": "@vitejs",
+        "confidence": "medium",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Add to .npmrc: @yourscope:registry=https://your-private-registry.com/"
+      }
+    ],
+    "src/pages/PasswordRecoveryPage.jsx": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Password Assignment",
+        "description": "Secret was removed from code but still exists in git history (commit c0e6c43456, Thu Oct 1 23:24:04 2026 -0500). Anyone with repo access can retrieve it.",
+        "matched": "password***rd?'",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Rotate this credential immediately, then clean history: npx bfg --replace-text passwords.txt"
+      }
+    ],
+    "test-security-suite.js": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Password Assignment",
+        "description": "Secret was removed from code but still exists in git history (commit 2cbaaca1b4, Tue Sep 29 22:03:47 2026 -0500). Anyone with repo access can retrieve it.",
+        "matched": "Password***987'",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Rotate this credential immediately, then clean history: npx bfg --replace-text passwords.txt"
+      }
+    ],
+    "test-auth.js": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Password Assignment",
+        "description": "Secret was removed from code but still exists in git history (commit 0bb5f14f18, Tue Sep 22 18:23:28 2026 -0500). Anyone with repo access can retrieve it.",
+        "matched": "Password***23!'",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Rotate this credential immediately, then clean history: npx bfg --replace-text passwords.txt"
+      }
+    ],
+    "skillswapv1/package-lock.json": [
+      {
+        "line": 0,
+        "column": 0,
+        "severity": "high",
+        "category": "history",
+        "rule": "GIT_HISTORY_SECRET",
+        "title": "Historical Secret: Upstash Redis REST Token",
+        "description": "Secret found in current code AND in git history (commit c638a227c5).",
+        "matched": "AXYPcz9M***GDj9",
+        "confidence": "high",
+        "cwe": null,
+        "owasp": null,
+        "fix": "Remove from code, rotate the credential, then clean git history with BFG or git filter-repo"
+      }
+    ],
+    "src/pages/AdminDashboard.jsx": [
+      {
+        "line": 131,
+        "column": 29,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_PUBLIC_ANON_INSERT",
+        "title": "Supabase: Unguarded Insert/Update/Delete",
+        "description": "Supabase data mutation without visible auth check. Ensure RLS policies protect this table.",
+        "matched": "supabase.from('dispute_actions').insert(",
+        "confidence": "medium",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Verify RLS is enabled on the table and policies restrict mutations to authenticated users."
+      },
+      {
+        "line": 152,
+        "column": 45,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_RLS_DISABLED",
+        "title": "Supabase: RLS Bypass via .rpc() or Admin Client",
+        "description": "Supabase .rpc() calls execute database functions that may bypass RLS policies.",
+        "matched": ".rpc('admin_grant_credits'",
+        "confidence": "medium",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Ensure the underlying SQL function uses SECURITY DEFINER carefully, or set search_path."
+      }
+    ],
+    "src/services/exchangeService.js": [
+      {
+        "line": 259,
+        "column": 13,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_RLS_DISABLED",
+        "title": "Supabase: RLS Bypass via .rpc() or Admin Client",
+        "description": "Supabase .rpc() calls execute database functions that may bypass RLS policies.",
+        "matched": ".rpc('complete_exchange'",
+        "confidence": "medium",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Ensure the underlying SQL function uses SECURITY DEFINER carefully, or set search_path."
+      }
+    ],
+    "src/services/profileService.js": [
+      {
+        "line": 31,
+        "column": 31,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_PUBLIC_ANON_INSERT",
+        "title": "Supabase: Unguarded Insert/Update/Delete",
+        "description": "Supabase data mutation without visible auth check. Ensure RLS policies protect this table.",
+        "matched": "supabase.from('profiles').update(",
+        "confidence": "medium",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Verify RLS is enabled on the table and policies restrict mutations to authenticated users."
+      },
+      {
+        "line": 36,
+        "column": 31,
+        "severity": "high",
+        "category": "auth",
+        "rule": "SUPABASE_PUBLIC_ANON_INSERT",
+        "title": "Supabase: Unguarded Insert/Update/Delete",
+        "description": "Supabase data mutation without visible auth check. Ensure RLS policies protect this table.",
+        "matched": "supabase.from('profiles').update(",
+        "confidence": "medium",
+        "cwe": "CWE-284",
+        "owasp": "A01:2021",
+        "fix": "Verify RLS is enabled on the table and policies restrict mutations to authenticated users."
+      }
+    ],
+    "src/services/passwordRecoveryService.js": [
+      {
+        "line": 3,
+        "column": 8,
+        "severity": "high",
+        "category": "llm",
+        "rule": "AGENT_CREDENTIAL_FORWARDING",
+        "title": "Agent: Credentials Passed Between Tools",
+        "description": "Agent forwards credentials between tools or to external services. Compromised tools can steal credentials.",
+        "matched": "function validateNewPassword(pass",
+        "confidence": "medium",
+        "cwe": "CWE-522",
+        "owasp": "A07:2021",
+        "fix": "Scope credentials per-tool. Never forward authentication tokens between tool invocations."
+      },
+      {
+        "line": 16,
+        "column": 14,
+        "severity": "high",
+        "category": "llm",
+        "rule": "AGENT_CREDENTIAL_FORWARDING",
+        "title": "Agent: Credentials Passed Between Tools",
+        "description": "Agent forwards credentials between tools or to external services. Compromised tools can steal credentials.",
+        "matched": "function updatePassword(pass",
+        "confidence": "medium",
+        "cwe": "CWE-522",
+        "owasp": "A07:2021",
+        "fix": "Scope credentials per-tool. Never forward authentication tokens between tool invocations."
+      }
+    ],
+    "src/main.jsx": [
+      {
+        "line": 7,
+        "column": 1,
+        "severity": "medium",
+        "category": "injection",
+        "rule": "EXCEPTION_NO_ERROR_BOUNDARY",
+        "title": "Exception: React App Without Error Boundary",
+        "description": "React app rendered without an Error Boundary. Unhandled component errors will crash the entire UI.",
+        "matched": "createRoot(document.getElementById('root'))",
+        "confidence": "low",
+        "cwe": "CWE-755",
+        "owasp": "A10:2025",
+        "fix": "Wrap your app: <ErrorBoundary fallback={<ErrorPage />}><App /></ErrorBoundary>"
+      }
+    ]
+  },
+  "stats": {
+    "totalFiles": 70,
+    "totalFindings": 14,
+    "lastScore": 62.2,
+    "lastGrade": "C"
+  }
+}
