@@ -32,6 +32,15 @@ try {
   for (const term of ['', ' GUITAR ', 'chords', 'acoustic', 'san antonio', 'english', 'music']) assert.equal(discovery.skillMatchesQuery(skill, term), true, term)
   assert.equal(discovery.skillMatchesQuery(skill, 'python'), false)
   assert.equal(discovery.skillMatchesQuery({}, 'guitar'), false)
+  const tags = [
+    { id: 'tag-1', name: 'Python' },
+    { id: 'tag-2', name: 'Web Development' },
+    { id: 'tag-6', name: 'Acoustic Guitar' },
+  ]
+  assert.deepEqual(discovery.getPrefixMatchedTags(tags, 'py').map((tag) => tag.name), [])
+  assert.deepEqual(discovery.getPrefixMatchedTags(tags, 'pyt').map((tag) => tag.name), ['Python'])
+  assert.deepEqual(discovery.getPrefixMatchedTags(tags, 'ACO').map((tag) => tag.name), ['Acoustic Guitar'])
+  assert.deepEqual(discovery.getPrefixMatchedTags(tags, 'guitar').map((tag) => tag.name), [])
   response = { data: [skill], error: null }
   assert.deepEqual(await discovery.getDiscoverableSkills('learner'), [skill])
   assert.ok(calls.some(([method, column, value]) => method === 'eq' && column === 'listing_type' && value === 'Teacher'))

@@ -65,8 +65,8 @@ function SearchPage() {
     <main className="search-page">
       <h1>Search</h1>
       <p>
-        Browse teacher listings. Type or choose a popular tag to filter, then
-        select Request Exchange to send a message about that skill.
+        Browse teacher listings. Type at least three letters for matching tags,
+        or choose a popular tag, then select Request Exchange.
       </p>
 
       <SearchBar query={query} onQueryChange={setQuery} />
