@@ -39,3 +39,13 @@ export function skillMatchesQuery(skill, query) {
 
   return haystack.some((value) => (value || '').toLowerCase().includes(needle))
 }
+
+export function getPrefixMatchedTags(tags, query) {
+  const needle = query.toLowerCase().trim()
+
+  if (needle.length < 3) {
+    return []
+  }
+
+  return tags.filter((tag) => (tag.name || '').toLowerCase().startsWith(needle))
+}

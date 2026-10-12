@@ -25,7 +25,15 @@
   font: inherit;
 }
 
+.search-bar__input--with-clear {
+  padding-right: 2.5rem;
+}
+
 .search-bar__field {
+  position: relative;
+}
+
+.search-bar__input-wrap {
   position: relative;
 }
 
@@ -69,8 +77,34 @@
   outline-offset: -2px;
 }
 
-.search-bar__status {
-  margin: 0;
-  font-size: 0.85rem;
+.search-bar__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
   color: var(--text);
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-bar__clear:hover,
+.search-bar__clear:focus-visible {
+  background: var(--accent-bg);
+  color: var(--text-h);
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+.search-bar__highlight {
+  background: var(--accent-bg);
+  color: inherit;
+  padding: 0;
 }
