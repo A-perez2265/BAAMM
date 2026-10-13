@@ -5,6 +5,7 @@ import SearchFilters from '../components/search/SearchFilters'
 import {
   EMPTY_SEARCH_FILTERS,
   getDiscoverableSkills,
+  getListingSuggestionTags,
   skillMatchesFilters,
   skillMatchesQuery,
 } from '../services/discoveryService'
@@ -66,6 +67,11 @@ function SearchPage() {
     [listings, query, filters]
   )
 
+  const suggestionTags = useMemo(
+    () => getListingSuggestionTags(listings),
+    [listings]
+  )
+
   const updateFilter = (key, value) => {
     setFilters((current) => ({ ...current, [key]: value }))
   }
@@ -88,7 +94,11 @@ function SearchPage() {
         or choose a popular tag and filters, then select Request Exchange.
       </p>
 
-      <SearchBar query={query} onQueryChange={setQuery} />
+      <SearchBar
+        query={query}
+        onQueryChange={setQuery}
+        suggestionTags={suggestionTags}
+      />
       <SearchFilters
         filters={filters}
         onFilterChange={updateFilter}

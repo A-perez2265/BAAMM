@@ -56,14 +56,21 @@
   background: var(--bg);
   box-shadow: var(--shadow);
   text-align: left;
+  max-height: calc(8 * 44px + 0.7rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .search-bar__suggestion {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
+  min-height: 44px;
   border: 0;
   background: transparent;
   font: inherit;
+  font-weight: 400;
   text-align: left;
   cursor: pointer;
   padding: 0.5rem 1rem;

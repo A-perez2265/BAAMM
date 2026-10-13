@@ -1,3 +1,4 @@
+import { parseTags } from '../utils/skillUtils'
 import { supabase } from '../utils/supabaseClient'
 
 export async function getDiscoverableSkills(currentUserId) {
@@ -67,6 +68,27 @@ export function skillMatchesFilters(skill, filters) {
   }
 
   return true
+}
+
+export function getListingSuggestionTags(listings) {
+  const counts = new Map()
+
+  for (const skill of listings || []) {
+    for (const tag of parseTags(skill.tags)) {
+      const key = tag.toLocaleLowerCase()
+      const existing = counts.get(key)
+
+      if (existing) {
+        existing.count += 1
+      } else {
+        counts.set(key, { name: tag, count: 1 })
+      }
+    }
+  }
+
+  return [...counts.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .map(({ name }) => ({ id: name.toLocaleLowerCase(), name }))
 }
 
 export function getPrefixMatchedTags(tags, query) {

@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import mockData from '../../../mockData.json';
 import { getPrefixMatchedTags } from '../../services/discoveryService';
 import './SearchBar.css';
-
-const predefinedTags = mockData.predefinedTags;
-const popularTags = predefinedTags.filter((tag) => tag.isPopular);
 
 function HighlightedTagName({ name, query }) {
   const prefixLength = query.trim().length;
@@ -19,17 +15,30 @@ function HighlightedTagName({ name, query }) {
   );
 }
 
-function SearchBar({ query, onQueryChange }) {
+function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const [isFocused, setIsFocused] = useState(false);
+  const [menuDismissed, setMenuDismissed] = useState(false);
 
   const trimmedQuery = query.trim();
   const showClear = query.length > 0;
-  const prefixMatches = getPrefixMatchedTags(predefinedTags, query);
-  const showSuggestedTags = isFocused && trimmedQuery === '';
-  const showAutocomplete = isFocused && trimmedQuery.length >= 3 && prefixMatches.length > 0;
+  const prefixMatches = getPrefixMatchedTags(suggestionTags, query);
+  const showSuggestedTags =
+    isFocused && !menuDismissed && trimmedQuery === '' && suggestionTags.length > 0;
+  const showAutocomplete =
+    isFocused && !menuDismissed && trimmedQuery.length >= 3 && prefixMatches.length > 0;
   const showDropdown = showSuggestedTags || showAutocomplete;
 
-  const clearQuery = () => onQueryChange('');
+  const updateQuery = (value) => {
+    setMenuDismissed(false);
+    onQueryChange(value);
+  };
+
+  const clearQuery = () => updateQuery('');
+  const keepInputFocused = (event) => event.preventDefault();
+  const selectTag = (name) => {
+    onQueryChange(name);
+    setMenuDismissed(true);
+  };
 
   return (
     <div className="search-bar">
@@ -50,7 +59,7 @@ function SearchBar({ query, onQueryChange }) {
             className={`search-bar__input${showClear ? ' search-bar__input--with-clear' : ''}`}
             placeholder="Search skills..."
             value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
+            onChange={(event) => updateQuery(event.target.value)}
             autoComplete="off"
             aria-expanded={showDropdown}
             aria-controls="search-suggested-tags"
@@ -73,12 +82,13 @@ function SearchBar({ query, onQueryChange }) {
             className="search-bar__suggestions"
             aria-label="Popular tags"
           >
-            {popularTags.map((tag) => (
+            {suggestionTags.map((tag) => (
               <li key={tag.id}>
                 <button
                   type="button"
                   className="search-bar__suggestion"
-                  onClick={() => onQueryChange(tag.name)}
+                  onMouseDown={keepInputFocused}
+                  onClick={() => selectTag(tag.name)}
                 >
                   {tag.name}
                 </button>
@@ -97,7 +107,8 @@ function SearchBar({ query, onQueryChange }) {
                 <button
                   type="button"
                   className="search-bar__suggestion"
-                  onClick={() => onQueryChange(tag.name)}
+                  onMouseDown={keepInputFocused}
+                  onClick={() => selectTag(tag.name)}
                 >
                   <HighlightedTagName name={tag.name} query={query} />
                 </button>
