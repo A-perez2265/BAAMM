@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SearchBar from '../components/search/SearchBar'
+import SearchFilters from '../components/search/SearchFilters'
 import {
+  EMPTY_SEARCH_FILTERS,
   getDiscoverableSkills,
+  skillMatchesFilters,
   skillMatchesQuery,
 } from '../services/discoveryService'
 import { supabase } from '../utils/supabaseClient'
@@ -11,10 +14,11 @@ import './SearchPage.css'
 
 function SearchPage() {
   const [query, setQuery] = useState('')
+  const [filters, setFilters] = useState(EMPTY_SEARCH_FILTERS)
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [revision, refreshListings] = useListingRefresh()
+  const [revision] = useListingRefresh()
 
   useEffect(() => {
     let active = true
@@ -54,9 +58,24 @@ function SearchPage() {
   }, [revision])
 
   const results = useMemo(
-    () => listings.filter((skill) => skillMatchesQuery(skill, query)),
-    [listings, query]
+    () =>
+      listings.filter(
+        (skill) =>
+          skillMatchesQuery(skill, query) && skillMatchesFilters(skill, filters)
+      ),
+    [listings, query, filters]
   )
+
+  const updateFilter = (key, value) => {
+    setFilters((current) => ({ ...current, [key]: value }))
+  }
+
+  const resetFilters = () => setFilters(EMPTY_SEARCH_FILTERS)
+
+  const clearSearch = () => {
+    setQuery('')
+    setFilters(EMPTY_SEARCH_FILTERS)
+  }
 
   const showEmptyResults = !loading && !error && listings.length > 0 && results.length === 0
   const showNoListings = !loading && !error && listings.length === 0
@@ -66,13 +85,15 @@ function SearchPage() {
       <h1>Search</h1>
       <p>
         Browse teacher listings. Type at least three letters for matching tags,
-        or choose a popular tag, then select Request Exchange.
+        or choose a popular tag and filters, then select Request Exchange.
       </p>
 
       <SearchBar query={query} onQueryChange={setQuery} />
-      <button type="button" onClick={refreshListings} disabled={loading}>
-        Refresh listings
-      </button>
+      <SearchFilters
+        filters={filters}
+        onFilterChange={updateFilter}
+        onReset={resetFilters}
+      />
 
       {loading && <p>Loading listings…</p>}
       {error && <p className="search-page__error">{error}</p>}
@@ -83,7 +104,7 @@ function SearchPage() {
       {showEmptyResults && (
         <div className="search-page__empty">
           <p>No Results found.</p>
-          <button type="button" onClick={() => setQuery('')}>
+          <button type="button" onClick={clearSearch}>
             Clear search
           </button>
         </div>

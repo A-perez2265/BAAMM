@@ -40,6 +40,35 @@ export function skillMatchesQuery(skill, query) {
   return haystack.some((value) => (value || '').toLowerCase().includes(needle))
 }
 
+export const EMPTY_SEARCH_FILTERS = {
+  category: 'all',
+  format: 'all',
+  experienceLevel: 'all',
+  language: 'all',
+}
+
+export function skillMatchesFilters(skill, filters) {
+  const active = filters || EMPTY_SEARCH_FILTERS
+
+  if (active.category !== 'all' && skill.category !== active.category) {
+    return false
+  }
+
+  if (active.format !== 'all' && skill.format !== active.format) {
+    return false
+  }
+
+  if (active.experienceLevel !== 'all' && skill.experience_level !== active.experienceLevel) {
+    return false
+  }
+
+  if (active.language !== 'all' && skill.language !== active.language) {
+    return false
+  }
+
+  return true
+}
+
 export function getPrefixMatchedTags(tags, query) {
   const needle = query.toLowerCase().trim()
 
