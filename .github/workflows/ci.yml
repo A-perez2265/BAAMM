@@ -198,8 +198,12 @@ jobs:
   live-security:
     name: Live Security Suite (optional)
     runs-on: ubuntu-latest
-    # Only run this job when the Supabase secret is available (i.e., not a fork PR).
-    if: ${{ secrets.VITE_SUPABASE_URL != '' }}
+    # Secrets are available on direct pushes to main and on PRs opened from
+    # within the same repo (not forks). GitHub blocks secret access on fork PRs
+    # by design, so this condition skips the job there automatically.
+    if: >
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout repository
