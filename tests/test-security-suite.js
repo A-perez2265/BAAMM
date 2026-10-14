@@ -37,7 +37,8 @@ const capturedOutput = [];
 
 function stripAnsi(str) {
   return typeof str === 'string'
-    ? str.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '')
+    // eslint-disable-next-line no-control-regex
+    ? str.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '') // intentional: strips ANSI terminal colour codes
     : String(str);
 }
 
