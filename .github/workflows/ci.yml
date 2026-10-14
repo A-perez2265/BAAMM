@@ -1,0 +1,237 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# SkillSwap — Continuous Integration
+# Triggers: push or pull_request targeting the main branch
+#
+# Jobs (all run on ubuntu-latest, Node 22 LTS):
+#   1. lint          → ESLint via eslint.config.js
+#   2. test          → All 5 integration test modules (Vite SSR, no live DB)
+#   3. security-scan → npm audit (dependency CVE check) + secret-leak guard
+#   4. build         → Vite production build (ensures the app compiles cleanly)
+#   5. live-security → Full Supabase security suite (only when secrets exist)
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel any in-progress run for the same branch/PR so pushes don't queue up.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Vite needs *some* values for VITE_SUPABASE_* at build time or it will
+  # throw from supabaseClient.js. These are intentional non-secret stubs
+  # used only during the build and offline test jobs.
+  VITE_SUPABASE_URL: https://placeholder.supabase.co
+  VITE_SUPABASE_PUBLISHABLE_KEY: placeholder-anon-key-for-ci-build-only
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1 — LINT
+  # Runs ESLint using the project's eslint.config.js. Fails the pipeline on
+  # any lint error (warnings are reported but do not fail the job).
+  # ────────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2 — TEST SUITE
+  # Runs all five offline integration test modules. Each module spins up an
+  # isolated Vite SSR server and mocks the Supabase client — no live DB needed.
+  # Tests are run individually so a failure in one module is clearly identified
+  # in the GitHub Actions log.
+  # ────────────────────────────────────────────────────────────────────────────
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test — Profile & Skills
+        run: node tests/profile-and-skills.mjs
+
+      - name: Test — Password Recovery
+        run: node tests/password-recovery.mjs
+
+      - name: Test — Discovery & Exchanges
+        run: node tests/discovery-and-exchanges.mjs
+
+      - name: Test — Discovery Filters
+        run: node tests/discovery-filters.mjs
+
+      - name: Test — Discovery Suggestions
+        run: node tests/discovery-suggestions.mjs
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 3 — SECURITY SCAN
+  # Two sub-steps:
+  #   a) npm audit — checks all installed packages against the Node Security
+  #      Advisory database. Fails on HIGH or CRITICAL severity CVEs.
+  #   b) Secret-leak guard — greps the source tree for patterns that suggest
+  #      a real Supabase service_role key was accidentally committed. The anon
+  #      key is safe to expose; the service_role key must never be in source.
+  # ────────────────────────────────────────────────────────────────────────────
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Dependency audit (npm audit)
+        # --audit-level=high fails only on HIGH/CRITICAL CVEs.
+        # Remove the flag entirely to fail on any severity.
+        run: npm audit --audit-level=high
+
+      - name: Secret-leak guard (grep source tree)
+        # Searches src/ for patterns resembling a Supabase service_role JWT
+        # (they always start with "eyJ" and are >200 chars). Exits non-zero
+        # if any match is found, which fails the job.
+        run: |
+          echo "Scanning src/ for leaked service_role keys..."
+          if grep -rE 'service_role[^=]*=\s*["\x27]?eyJ[A-Za-z0-9_-]{200,}' src/; then
+            echo "::error::Potential Supabase service_role key found in source. Remove it immediately."
+            exit 1
+          fi
+          echo "No leaked secrets detected."
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 4 — BUILD CHECK
+  # Runs `vite build` to confirm the production bundle compiles without errors.
+  # Uses stub env values (defined in the top-level `env:` block above) so
+  # supabaseClient.js doesn't throw during the build.
+  # ────────────────────────────────────────────────────────────────────────────
+  build:
+    name: Production Build Check
+    runs-on: ubuntu-latest
+    # Only block on lint + test passing — security-scan runs in parallel.
+    needs: [lint, test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Vite production build
+        run: npm run build
+
+      - name: Verify dist output exists
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html not found — build output is missing."
+            exit 1
+          fi
+          echo "dist/index.html present. Build succeeded."
+
+      # Upload the bundle as a downloadable artifact on every successful build
+      # so teammates can inspect or deploy without re-running the pipeline.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 5 — LIVE SECURITY SUITE (optional, secrets-gated)
+  # Runs test-security-suite.js and test-auth.js against the real Supabase
+  # project. This job is SKIPPED automatically when the required secrets are
+  # not configured in the repository, so it never blocks PRs from forks or
+  # contributors who don't have access to credentials.
+  #
+  # To enable: add these secrets in GitHub → Settings → Secrets → Actions:
+  #   VITE_SUPABASE_URL           (your Supabase project URL)
+  #   VITE_SUPABASE_PUBLISHABLE_KEY (your Supabase anon key)
+  #   TEST_USER_PASSWORD          (password used by the security test accounts)
+  # ────────────────────────────────────────────────────────────────────────────
+  live-security:
+    name: Live Security Suite (optional)
+    runs-on: ubuntu-latest
+    # Only run this job when the Supabase secret is available (i.e., not a fork PR).
+    if: ${{ secrets.VITE_SUPABASE_URL != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Supabase security suite
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: node --env-file=<(printenv | grep -E '^(VITE_|TEST_)') tests/test-security-suite.js
+
+      - name: Run auth integration suite
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: node --env-file=<(printenv | grep -E '^(VITE_|TEST_)') tests/test-auth.js
+
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report-${{ github.sha }}
+          path: tests/results/
+          retention-days: 30
