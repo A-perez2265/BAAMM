@@ -5,6 +5,11 @@ const address = /\d+[a-z]?\s+(?:[a-z0-9.'-]+\s+){0,6}(?:street|st|avenue|ave|roa
 const compactAddress = /\d+[a-z]?\s*[a-z\s.'-]{1,100}(?:street|avenue|road|drive|lane|boulevard|court|circle|parkway|terrace|trail|place|highway)/i
 const email = /[a-z0-9.!$%&'*+/=?^_`{|}~-]+\s*@\s*[a-z0-9.-]+\.[a-z]{2,}/i
 const phone = /(?:^|[^a-z0-9])(?:\+?\d[\s().-]*){7,15}(?![a-z0-9])/i
+// Secondary check: strip non-digits and test raw digit count (catches obfuscated numbers
+// like "call2105550123now" where boundary anchors above don't fire). Upper bound 20
+// covers edge cases up to 16+ digits while all false-positive prose sentences
+// total ≤ 6 digits.
+const compactPhone = /^\d{7,20}$/
 
 export const privacyMessage = 'Remove email addresses, phone numbers, and street addresses from public profile and skill details. Use only a city/state for location.'
 
@@ -13,7 +18,8 @@ export function containsContactDetails(value) {
     .normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/#/g, ' ')
     .replace(/\s*(?:\[at\]|\(at\))\s*/gi, '@')
     .replace(/\s*(?:\[dot\]|\(dot\))\s*/gi, '.')
-  return email.test(text) || phone.test(text) || address.test(text) || compactAddress.test(text)
+  const digitsOnly = text.replace(/[^0-9]/g, '')
+  return email.test(text) || phone.test(text) || compactPhone.test(digitsOnly) || address.test(text) || compactAddress.test(text)
 }
 
 export function validatePublicFields(fields) {
