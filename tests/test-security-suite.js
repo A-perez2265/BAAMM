@@ -927,7 +927,7 @@ async function testSEC11() {
 async function testSEC12() {
   console.log(`\n${BOLD}[SEC-12] Credit Transfer Concurrency & Double-Spend Defense${RESET}`);
 
-  // Create exchange in 'accepted' status
+  // Confirm is allowed only after the teacher marks the lesson complete.
   const skill = await createTeacherSkill(clientB, userB, 'Data Analysis with Python');
   const { data: exchange, error: exError } = await clientA
     .from('exchanges')
@@ -936,7 +936,7 @@ async function testSEC12() {
         skill_id: skill.id,
         learner_id: userA.id,
         teacher_id: userB.id,
-        status: 'accepted',
+        status: 'session_completed',
       },
     ])
     .select()

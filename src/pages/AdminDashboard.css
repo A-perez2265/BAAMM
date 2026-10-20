@@ -517,16 +517,6 @@
   color: #ffffff;
 }
 
-.btn-reopen {
-  background: var(--code-bg);
-  color: var(--text-h);
-  border: 1px solid var(--border);
-}
-
-.btn-reopen:hover {
-  background: var(--border);
-}
-
 /* Empty & Loading States */
 .admin-loading-container,
 .admin-empty-card,

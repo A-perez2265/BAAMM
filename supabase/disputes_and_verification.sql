@@ -249,7 +249,7 @@ begin
     raise exception 'Unauthorized: Only the learner can complete the exchange';
   end if;
 
-  if v_exchange.status not in ('accepted', 'session_completed', 'awaiting_confirmation') then
+  if v_exchange.status not in ('session_completed', 'awaiting_confirmation') then
     raise exception 'Exchange cannot be finalized in its current status: %', v_exchange.status;
   end if;
 

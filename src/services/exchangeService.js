@@ -191,7 +191,11 @@ export async function getAcceptedTeachingExchanges(teacherId) {
     .from('exchanges')
     .select('*')
     .eq('teacher_id', teacherId)
-    .eq('status', EXCHANGE_STATUS.ACCEPTED)
+    .in('status', [
+      EXCHANGE_STATUS.ACCEPTED,
+      EXCHANGE_STATUS.SESSION_COMPLETED,
+      EXCHANGE_STATUS.AWAITING_CONFIRMATION,
+    ])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -257,6 +261,7 @@ export async function getAwaitingLearnerConfirmation(learnerId) {
     .select('*')
     .eq('learner_id', learnerId)
     .in('status', [
+      EXCHANGE_STATUS.ACCEPTED,
       EXCHANGE_STATUS.SESSION_COMPLETED,
       EXCHANGE_STATUS.AWAITING_CONFIRMATION,
     ])

@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../utils/supabaseClient'
 import DisputeModal from '../components/DisputeModal'
+import { EXCHANGE_STATUS } from '../constants/exchangeStatus'
 import {
   confirmExchange,
   getAwaitingLearnerConfirmation,
 } from '../services/exchangeService'
 import './ConfirmExchangesPage.css'
+
+function canLearnerConfirm(status) {
+  return (
+    status === EXCHANGE_STATUS.SESSION_COMPLETED ||
+    status === EXCHANGE_STATUS.AWAITING_CONFIRMATION
+  )
+}
 
 function ConfirmExchangesPage() {
   const [user, setUser] = useState(null)
@@ -50,6 +58,11 @@ function ConfirmExchangesPage() {
   }, [])
 
   const handleConfirm = async (exchange) => {
+    if (!canLearnerConfirm(exchange.status)) {
+      setError('Wait until the teacher marks this lesson complete before confirming.')
+      return
+    }
+
     setError('')
     setSuccess('')
     setLoadingId(exchange.id)
@@ -72,8 +85,8 @@ function ConfirmExchangesPage() {
     <main className="confirm-exchanges">
       <h1>Confirm exchanges</h1>
       <p>
-        The teacher marked these complete. Confirm if the lesson happened, or
-        file a dispute for admin review.
+        Confirm after the teacher marks a lesson complete, or report a problem
+        on any accepted lesson that has not been settled.
       </p>
 
       {error && <p className="confirm-exchanges-error">{error}</p>}
@@ -94,14 +107,19 @@ function ConfirmExchangesPage() {
               <h2>{skillTitle}</h2>
               <p>Teacher: {teacherName}</p>
               <p>{exchange.message}</p>
+              {exchange.status === EXCHANGE_STATUS.ACCEPTED && (
+                <p>Waiting for the teacher to mark this complete.</p>
+              )}
               <div className="confirm-exchanges-actions">
-                <button
-                  type="button"
-                  onClick={() => handleConfirm(exchange)}
-                  disabled={loadingId === exchange.id}
-                >
-                  Confirm
-                </button>
+                {canLearnerConfirm(exchange.status) && (
+                  <button
+                    type="button"
+                    onClick={() => handleConfirm(exchange)}
+                    disabled={loadingId === exchange.id}
+                  >
+                    Confirm
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setDisputeExchange(exchange)}
