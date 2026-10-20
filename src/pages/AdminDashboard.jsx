@@ -139,49 +139,20 @@ export default function AdminDashboard() {
     if (error) throw error;
   };
 
-  const handleGrantCredits = async (dispute) => {
-    setActionError('');
-    setActionSuccess('');
-
-    if (!dispute.reporter_id) {
-      setActionError('Cannot grant credits: missing reporter user id.');
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.rpc('admin_grant_credits', {
-        p_user_id: dispute.reporter_id,
-        p_amount: 1,
-      });
-
-      if (error) throw error;
-
-      const balance = data?.credits_balance;
-      const username = dispute.reporter_username || 'user';
-      const detail = `Granted 1 credit to @${username}${
-        balance != null ? ` (new balance: ${balance})` : ''
-      }.`;
-
-      let historyNote = '';
-      try {
-        await logDisputeAction(dispute.id, 'credits_granted', detail);
-        await fetchDisputes({ silent: true });
-      } catch (historyError) {
-        console.error('Ticket history was not saved:', historyError);
-        historyNote =
-          ' History was not saved — run the dispute_actions SQL if you have not yet.';
-      }
-
-      setActionSuccess(detail + historyNote);
-    } catch (err) {
-      console.error('Credit grant failed:', err);
-      setActionError('Failed to grant credits: ' + err.message);
-    }
-  };
-
   const handleUpdateStatus = async (dispute, newStatus) => {
     setActionError('');
     setActionSuccess('');
+
+    const allowed = ['under_review', 'resolved'];
+    if (!allowed.includes(newStatus)) {
+      setActionError('MVP admin actions are review and close without payment.');
+      return;
+    }
+
+    if (dispute.status === 'resolved') {
+      setActionError('Resolved cases cannot be reopened or paid through this screen.');
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -193,7 +164,10 @@ export default function AdminDashboard() {
 
       const fromLabel = (dispute.status || 'open').replace('_', ' ');
       const toLabel = newStatus.replace('_', ' ');
-      const detail = `Changed status from ${fromLabel} to ${toLabel}.`;
+      const detail =
+        newStatus === 'resolved'
+          ? 'Closed without transferring credits. Exchange remains issue_reported.'
+          : `Changed status from ${fromLabel} to ${toLabel}.`;
 
       let historyNote = '';
       try {
@@ -210,7 +184,11 @@ export default function AdminDashboard() {
         );
       }
 
-      setActionSuccess(`Ticket status updated to "${toLabel}".` + historyNote);
+      const success =
+        newStatus === 'resolved'
+          ? 'Closed without transferring credits.'
+          : `Ticket status updated to "${toLabel}".`;
+      setActionSuccess(success + historyNote);
     } catch (err) {
       console.error('Status update failed:', err);
       setActionError('Failed to update status: ' + err.message);
@@ -300,7 +278,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="admin-title">Dispute Mediation Center</h1>
           <p className="admin-subtitle">
-            Review reported disputes.
+            Review reported disputes. Close without transferring credits.
           </p>
         </div>
         <div className="admin-header-actions">
@@ -523,47 +501,34 @@ export default function AdminDashboard() {
                 </details>
               </div>
 
-              {/* Status Action Controls */}
               <footer className="dispute-card-actions">
-                <span className="actions-label">Change Status:</span>
-                <div className="action-button-group">
-                  <button
-                    type="button"
-                    className="btn-status btn-resolve"
-                    onClick={() => handleGrantCredits(dispute)}
-                  >
-                    Grant 1 credit to reporter
-                  </button>
-                  {dispute.status !== 'under_review' && (
-                    <button
-                      type="button"
-                      className="btn-status btn-review"
-                      onClick={() => handleUpdateStatus(dispute, 'under_review')}
-                    >
-                      Mark Under Review
-                    </button>
-                  )}
-
-                  {dispute.status !== 'resolved' && (
-                    <button
-                      type="button"
-                      className="btn-status btn-resolve"
-                      onClick={() => handleUpdateStatus(dispute, 'resolved')}
-                    >
-                      Resolve Dispute
-                    </button>
-                  )}
-
-                  {dispute.status !== 'open' && (
-                    <button
-                      type="button"
-                      className="btn-status btn-reopen"
-                      onClick={() => handleUpdateStatus(dispute, 'open')}
-                    >
-                      Reopen Ticket
-                    </button>
-                  )}
-                </div>
+                {dispute.status === 'resolved' ? (
+                  <p className="actions-label">
+                    Closed without transferring credits. This case cannot be reopened here.
+                  </p>
+                ) : (
+                  <>
+                    <span className="actions-label">Admin actions:</span>
+                    <div className="action-button-group">
+                      {dispute.status !== 'under_review' && (
+                        <button
+                          type="button"
+                          className="btn-status btn-review"
+                          onClick={() => handleUpdateStatus(dispute, 'under_review')}
+                        >
+                          Mark Under Review
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn-status btn-resolve"
+                        onClick={() => handleUpdateStatus(dispute, 'resolved')}
+                      >
+                        Close without payment
+                      </button>
+                    </div>
+                  </>
+                )}
               </footer>
             </article>
           ))}

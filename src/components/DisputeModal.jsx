@@ -72,6 +72,13 @@ export default function DisputeModal({
     setLoading(true);
 
     try {
+      const disputable = ['accepted', 'session_completed', 'awaiting_confirmation']
+      if (!disputable.includes(exchange.status)) {
+        throw new Error(
+          'This exchange can no longer be disputed. Refresh and try another unsettled lesson.'
+        )
+      }
+
       const disputePayload = {
         exchange_id: exchange.id,
         reporter_id: currentUser?.id,
@@ -93,17 +100,26 @@ export default function DisputeModal({
 
       if (disputeError) throw disputeError;
 
-      // Step 2: Update Exchange status to 'issue_reported'
-      const { error: exchangeError } = await supabase
+      // Step 2: Block ordinary confirmation. Only unsettled participant exchanges.
+      const { data: updatedExchange, error: exchangeError } = await supabase
         .from('exchanges')
         .update({
           status: 'issue_reported',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', exchange.id);
+        .eq('id', exchange.id)
+        .in('status', ['accepted', 'session_completed', 'awaiting_confirmation'])
+        .or(
+          `learner_id.eq.${currentUser?.id},teacher_id.eq.${currentUser?.id}`
+        )
+        .select('id')
+        .maybeSingle();
 
-      if (exchangeError) {
-        console.warn('Note: Could not update exchange status:', exchangeError.message);
+      if (exchangeError) throw exchangeError
+      if (!updatedExchange) {
+        throw new Error(
+          'This exchange can no longer be disputed. Refresh and try another unsettled lesson.'
+        )
       }
 
       setSuccessMessage(

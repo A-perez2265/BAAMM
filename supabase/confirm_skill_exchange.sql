@@ -1,5 +1,7 @@
 -- Unique RPC name avoids ambiguous complete_exchange overloads.
 -- Preserves both existing functions for older clients.
+-- Credits move only after the teacher marks the lesson complete
+-- (session_completed, or legacy awaiting_confirmation). Confirm from accepted is not allowed.
 begin;
 
 create or replace function public.confirm_skill_exchange(p_exchange_id uuid)
@@ -29,7 +31,7 @@ begin
     raise exception 'Unauthorized: Only the learner can complete the exchange';
   end if;
 
-  if v_exchange.status not in ('accepted', 'session_completed', 'awaiting_confirmation') then
+  if v_exchange.status not in ('session_completed', 'awaiting_confirmation') then
     raise exception 'Exchange cannot be finalized in its current status: %', v_exchange.status;
   end if;
 
