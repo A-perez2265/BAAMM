@@ -1,10 +1,11 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -16,7 +17,10 @@ export default function AdminDashboard() {
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  // 1. Verify Admin Access
+  // 1. Verify Admin Access — authoritative server-side check via Supabase RPC.
+  //    We do NOT rely on user_metadata (user-editable) or the public profiles
+  //    table. The `is_admin()` function reads from auth.jwt() app_metadata,
+  //    which only a Supabase service-role key can write.
   useEffect(() => {
     async function checkAdminStatus() {
       try {
@@ -25,48 +29,38 @@ export default function AdminDashboard() {
         } = await supabase.auth.getSession();
 
         if (!session?.user) {
-          setCurrentUser(null);
-          setIsAdmin(false);
+          // Not authenticated — Auth wrapper will handle redirect to /login.
           setCheckingAuth(false);
           return;
         }
 
-        const user = session.user;
-        setCurrentUser(user);
+        setCurrentUser(session.user);
 
-        // Check JWT user/app metadata
-        const hasJwtAdmin =
-          user.app_metadata?.role === 'admin' ||
-          user.user_metadata?.is_admin === true;
+        // Call the server-side RPC; result is boolean or null on error.
+        const { data: adminFlag, error } = await supabase.rpc('is_admin');
 
-        if (hasJwtAdmin) {
-          setIsAdmin(true);
-          setCheckingAuth(false);
+        if (error) {
+          console.error('Admin status verification failed:', error);
+          navigate('/', { replace: true });
           return;
         }
 
-        // Query public.profiles is_admin column
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (!error && profile?.is_admin === true) {
+        if (adminFlag === true) {
           setIsAdmin(true);
         } else {
-          setIsAdmin(false);
+          // Confirmed non-admin: redirect immediately so no page content leaks.
+          navigate('/', { replace: true });
         }
       } catch (err) {
         console.error('Admin status verification failed:', err);
-        setIsAdmin(false);
+        navigate('/', { replace: true });
       } finally {
         setCheckingAuth(false);
       }
     }
 
     checkAdminStatus();
-  }, []);
+  }, [navigate]);
 
   // 2. Load disputes
   const fetchDisputes = useCallback(async ({ silent = false } = {}) => {
@@ -245,30 +239,9 @@ export default function AdminDashboard() {
 
   // Unauthorized State
   if (!isAdmin) {
-    return (
-      <div className="admin-unauthorized-card">
-        <div className="admin-unauthorized-icon">🔒</div>
-        <h2>Access Restricted</h2>
-        <p>
-          You must be signed in with an authorized Administrator account to view
-          the SkillSwap Dispute Mediation Center.
-        </p>
-        <div className="admin-unauthorized-meta">
-          <span>
-            Current User:{' '}
-            <strong>{currentUser ? currentUser.email : 'Not logged in'}</strong>
-          </span>
-        </div>
-        <div className="admin-unauthorized-actions">
-          <Link to="/" className="admin-btn-back">
-            Return to Dashboard
-          </Link>
-          <Link to="/profile" className="admin-btn-back">
-            Go to Profile
-          </Link>
-        </div>
-      </div>
-    );
+    // navigate() was already called inside checkAdminStatus; render nothing
+    // while the router processes the redirect to avoid a flash of content.
+    return null;
   }
 
   return (
