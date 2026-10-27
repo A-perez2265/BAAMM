@@ -19,6 +19,7 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const [isFocused, setIsFocused] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [highlightMenuKey, setHighlightMenuKey] = useState('closed');
 
   const trimmedQuery = query.trim();
   const showClear = query.length > 0;
@@ -29,20 +30,31 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
     isFocused && !menuDismissed && trimmedQuery.length >= 3 && prefixMatches.length > 0;
   const showDropdown = showSuggestedTags || showAutocomplete;
   const visibleTags = showSuggestedTags ? suggestionTags : showAutocomplete ? prefixMatches : [];
+  const menuKey = showSuggestedTags
+    ? `suggested:${suggestionTags.map((tag) => tag.id).join('|')}`
+    : showAutocomplete
+      ? `auto:${trimmedQuery}:${prefixMatches.map((tag) => tag.id).join('|')}`
+      : 'closed';
 
-  useEffect(() => {
+  if (highlightMenuKey !== menuKey) {
+    setHighlightMenuKey(menuKey);
     setActiveIndex(-1);
-  }, [showSuggestedTags, showAutocomplete, query]);
+  }
+
+  const activeTagId =
+    activeIndex >= 0 && visibleTags[activeIndex]
+      ? visibleTags[activeIndex].id
+      : null;
 
   useEffect(() => {
-    if (activeIndex < 0 || !visibleTags[activeIndex]) {
+    if (!activeTagId) {
       return;
     }
 
     document
-      .getElementById(`search-tag-${visibleTags[activeIndex].id}`)
+      .getElementById(`search-tag-${activeTagId}`)
       ?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex, visibleTags]);
+  }, [activeTagId]);
 
   const updateQuery = (value) => {
     setMenuDismissed(false);
