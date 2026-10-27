@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getPrefixMatchedTags } from '../../services/discoveryService';
 import './SearchBar.css';
 
@@ -18,6 +18,7 @@ function HighlightedTagName({ name, query }) {
 function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const [isFocused, setIsFocused] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   const trimmedQuery = query.trim();
   const showClear = query.length > 0;
@@ -27,6 +28,21 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const showAutocomplete =
     isFocused && !menuDismissed && trimmedQuery.length >= 3 && prefixMatches.length > 0;
   const showDropdown = showSuggestedTags || showAutocomplete;
+  const visibleTags = showSuggestedTags ? suggestionTags : showAutocomplete ? prefixMatches : [];
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [showSuggestedTags, showAutocomplete, query]);
+
+  useEffect(() => {
+    if (activeIndex < 0 || !visibleTags[activeIndex]) {
+      return;
+    }
+
+    document
+      .getElementById(`search-tag-${visibleTags[activeIndex].id}`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, visibleTags]);
 
   const updateQuery = (value) => {
     setMenuDismissed(false);
@@ -38,7 +54,47 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const selectTag = (name) => {
     onQueryChange(name);
     setMenuDismissed(true);
+    setActiveIndex(-1);
   };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setMenuDismissed(true);
+      setActiveIndex(-1);
+      return;
+    }
+
+    if (!showDropdown || visibleTags.length === 0) {
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((current) =>
+        current < visibleTags.length - 1 ? current + 1 : 0
+      );
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((current) =>
+        current <= 0 ? visibleTags.length - 1 : current - 1
+      );
+      return;
+    }
+
+    if (event.key === 'Enter' && activeIndex >= 0 && visibleTags[activeIndex]) {
+      event.preventDefault();
+      selectTag(visibleTags[activeIndex].name);
+    }
+  };
+
+  const activeOptionId =
+    activeIndex >= 0 && visibleTags[activeIndex]
+      ? `search-tag-${visibleTags[activeIndex].id}`
+      : undefined;
 
   return (
     <div className="search-bar">
@@ -49,7 +105,10 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
         className="search-bar__field"
         onFocus={() => setIsFocused(true)}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setIsFocused(false);
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setIsFocused(false);
+            setActiveIndex(-1);
+          }
         }}
       >
         <div className="search-bar__input-wrap">
@@ -60,9 +119,13 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
             placeholder="Search skills..."
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
+            onKeyDown={handleKeyDown}
             autoComplete="off"
+            role="combobox"
             aria-expanded={showDropdown}
             aria-controls="search-suggested-tags"
+            aria-activedescendant={activeOptionId}
+            aria-autocomplete="list"
           />
           {showClear && (
             <button
@@ -80,14 +143,19 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
           <ul
             id="search-suggested-tags"
             className="search-bar__suggestions"
+            role="listbox"
             aria-label="Popular tags"
           >
-            {suggestionTags.map((tag) => (
-              <li key={tag.id}>
+            {suggestionTags.map((tag, index) => (
+              <li key={tag.id} role="presentation">
                 <button
                   type="button"
-                  className="search-bar__suggestion"
+                  id={`search-tag-${tag.id}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  className={`search-bar__suggestion${index === activeIndex ? ' search-bar__suggestion--active' : ''}`}
                   onMouseDown={keepInputFocused}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => selectTag(tag.name)}
                 >
                   {tag.name}
@@ -100,14 +168,19 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
           <ul
             id="search-suggested-tags"
             className="search-bar__suggestions"
+            role="listbox"
             aria-label="Matching tags"
           >
-            {prefixMatches.map((tag) => (
-              <li key={tag.id}>
+            {prefixMatches.map((tag, index) => (
+              <li key={tag.id} role="presentation">
                 <button
                   type="button"
-                  className="search-bar__suggestion"
+                  id={`search-tag-${tag.id}`}
+                  role="option"
+                  aria-selected={index === activeIndex}
+                  className={`search-bar__suggestion${index === activeIndex ? ' search-bar__suggestion--active' : ''}`}
                   onMouseDown={keepInputFocused}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => selectTag(tag.name)}
                 >
                   <HighlightedTagName name={tag.name} query={query} />
