@@ -78,7 +78,8 @@
 }
 
 .search-bar__suggestion:hover,
-.search-bar__suggestion:focus-visible {
+.search-bar__suggestion:focus-visible,
+.search-bar__suggestion--active {
   background: var(--accent-bg);
   outline: 2px solid var(--accent);
   outline-offset: -2px;
