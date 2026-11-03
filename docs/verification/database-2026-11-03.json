@@ -1,12 +1,12 @@
 {
-  "startedAt": "2026-11-03T19:12:24.708Z",
-  "finishedAt": "2026-11-03T19:12:27.426Z",
+  "startedAt": "2026-11-03T19:30:16.603Z",
+  "finishedAt": "2026-11-03T19:30:19.543Z",
   "scope": "Disposable PostgreSQL with fixture Auth/Storage schemas. No hosted configuration, real authentication, HTTP storage access, or concurrent-session verification.",
   "migrations": {
     "base_schema.sql": "c3cfc270fd4e2c1b352e6faae9dd01f397357ba50e55a02613620a7239ffa18b",
     "exchanges.sql": "9f12f2a6370c27b665008798e39433502e394369a2a92d901e3ad5a6c9ce8eaa",
     "profile_avatars.sql": "b6c5b32c4bd730997863fadc94c5789b226b16ef939752a9f4cd125cdf4e2109",
-    "disputes_and_verification.sql": "c91d2c8e1a964e8fb9eaa55044b475ff03f461f7cc6e8b54e6a8a40311ad005d",
+    "disputes_and_verification.sql": "475ca8147b992d3148dafcede3e2ce9298a14934dae6e1303f413816333bce45",
     "dispute_actions.sql": "935412788b8e0e0b542f42a721896bc9167e1d7e0e74e28de3bf99ea37c51221",
     "confirm_skill_exchange.sql": "e8936e40a0aa8496e523437334b53073d0c86f673f49db2059a02e9b498767a8",
     "profile_credit_transfers.sql": "37a6617808d8c21855ddc57aa184bdb023f9f80d018b27e81542b87e14c7b62a",
@@ -106,5 +106,5 @@
       "status": "PASS"
     }
   ],
-  "test_source_sha256": "ba10a1048e3735b18a8af8eaf2b57679981e9c8f61420b7376f18e6c50c0ffd2"
+  "test_source_sha256": "a00423bc92d86495779087ee8caa7c65d91e9de9569b75736c245fe511d97269"
 }

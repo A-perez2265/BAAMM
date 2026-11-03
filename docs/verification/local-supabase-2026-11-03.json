@@ -1,0 +1,210 @@
+{
+  "date": "2026-11-03",
+  "baseCommit": "7e994b9fd143c67f3936502bcaf87fa2019c132d",
+  "uncommittedChanges": true,
+  "environment": "Docker-backed Supabase at http://127.0.0.1:54321",
+  "scope": "Upgrade of an existing local profile/skill snapshot using repository setup and hardening SQL. Real local Auth, Data API, Storage HTTP and concurrent requests. Shared hosted Supabase unchanged.",
+  "sourceFilesSha256": {
+    "tests/local-supabase-workflow.mjs": "5b896ddeb7648e24207a49e4c11c42569d7d0f52f7fe0446c32a1a329f92abd5",
+    "tests/profile-and-skills.live.mjs": "266765ed4b8fe72b34b7b469f5bd1160b860b7a0ddf644757a04020333ea35f3",
+    "tests/e2e/exchange.live.spec.js": "8534da60ae074662366d55da11558cbb83888c66dfef982a463f3298e1ae028f",
+    "tests/e2e/evidence-reporter.js": "ab1bc3cbdf0acfbcfc9f6f17939a7b6dbbbe4274bde7911015b1a983cd565dd0",
+    "playwright.config.js": "7b476c3c65aed89e94eca2686492a778f68c227733fad1d455b9099a1e745288",
+    "package-lock.json": "9dae426d6aace24daf4ef103a8f1c20a2e7fbb530a493327a95aab2c67e34872",
+    "supabase/disputes_and_verification.sql": "475ca8147b992d3148dafcede3e2ce9298a14934dae6e1303f413816333bce45",
+    "supabase/mvp_security_hardening.sql": "93b0953e27a75e3d8253cdfc0afd697bc0d19f32697f993e78d801eea1331748"
+  },
+  "profileSkillApi": {
+    "startedAt": "2026-11-03T19:30:19.841Z",
+    "finishedAt": "2026-11-03T19:30:21.278Z",
+    "results": [
+      {
+        "id": "LIVE-PRF-01",
+        "scenario": "Signup provisions distinct non-admin profiles with three credits",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-02",
+        "scenario": "Own profile changes persist on a separate read",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-03",
+        "scenario": "Cross-user profile update is denied and preserves the target row",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-04",
+        "scenario": "Ordinary user cannot change own credits_balance",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-05",
+        "scenario": "Ordinary user cannot change own is_admin",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-06",
+        "scenario": "Duplicate username is rejected without modifying the profile",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-07",
+        "scenario": "Direct profile API write cannot bypass email privacy validation",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-01",
+        "scenario": "Own skill creation, editing, and deletion persist on separate reads",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-02",
+        "scenario": "Skill insertion cannot spoof another owner",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-03",
+        "scenario": "Cross-user skill update is denied and preserves the record",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-04",
+        "scenario": "Cross-user skill delete is denied and preserves the record",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-05",
+        "scenario": "Own skill cannot be reassigned to another user",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-06",
+        "scenario": "Database rejects unsupported listing types",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-SKL-07",
+        "scenario": "Direct skill API write cannot bypass email privacy validation",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      },
+      {
+        "id": "LIVE-PRF-08",
+        "scenario": "User-editable metadata cannot grant administrator privileges",
+        "status": "PASS",
+        "actual": "All assertions passed."
+      }
+    ],
+    "fixturesRemoved": 3,
+    "cleanupErrors": []
+  },
+  "workflowApi": {
+    "startedAt": "2026-11-03T19:29:28.502Z",
+    "finishedAt": "2026-11-03T19:29:31.178Z",
+    "cases": [
+      {
+        "id": "LOCAL-AUTH",
+        "expected": "Real local signup/login yields three credits; editable metadata cannot grant admin",
+        "actual": "All assertions passed",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-SETTLEMENT",
+        "expected": "Only learner confirms; one credit moves and replay is rejected",
+        "actual": "All assertions passed",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-CONCURRENT-REPLAY",
+        "expected": "Five independent authenticated requests settle one exchange exactly once",
+        "actual": "One success, four rejections; learner 1, teacher 5",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-LAST-CREDIT",
+        "expected": "Competing exchanges cannot spend the same final credit",
+        "actual": "One settlement, one insufficient-funds rejection; learner 0, teacher 6",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-DISPUTE",
+        "expected": "Participant report blocks confirmation; admin closure is audited without payment",
+        "actual": "All assertions passed",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-DISPUTE-RACE",
+        "expected": "Confirmation and reporting serialize to one valid outcome",
+        "actual": "One success, one rejection; resulting exchange issue_reported",
+        "status": "PASS"
+      },
+      {
+        "id": "LOCAL-STORAGE",
+        "expected": "Public URL denied; uploader/admin downloads succeed; unrelated download denied",
+        "actual": "Public HTTP 400; owner/admin permitted; unrelated member denied",
+        "status": "PASS"
+      }
+    ],
+    "retainedFixtureCount": 6,
+    "fixturePolicy": "Synthetic accounts, skill/exchange/dispute history and one storage object retained in local test database."
+  },
+  "browserWorkflow": {
+    "startedAt": "2026-11-03T19:30:26.645Z",
+    "finishedAt": "2026-11-03T19:30:38.544Z",
+    "status": "passed",
+    "scope": "Live browser workflow against an explicitly configured Supabase test environment. Real authentication, fixture writes and credit transfers; signup and concurrent requests are outside this scenario.",
+    "scenario": "E2E-EXCHANGE: teacher listing to learner confirmation and persisted dashboard credits",
+    "actual": {
+      "title": "E2E Guitar FERIHCXVBLKQ",
+      "environment": "http://127.0.0.1:54321",
+      "startedAt": "2026-11-03T19:30:28.541Z",
+      "before": {
+        "teacher": {
+          "balance": 3,
+          "earned": 0,
+          "spent": 0
+        },
+        "learner": {
+          "balance": 3,
+          "earned": 0,
+          "spent": 0
+        }
+      },
+      "skillId": "df15b490-a89a-4cca-836a-d8bde3c4bde3",
+      "exchangeId": "9b34e1a9-0ee7-4d80-86fe-6660ac03435c",
+      "after": {
+        "teacher": {
+          "balance": 4,
+          "earned": 1,
+          "spent": 0
+        },
+        "learner": {
+          "balance": 2,
+          "earned": 0,
+          "spent": 1
+        }
+      },
+      "cleanup": "No automatic deletion. Test-project listing, exchanges and credit changes retained for history.",
+      "finishedAt": "2026-11-03T19:30:37.832Z"
+    }
+  },
+  "remainingLimits": [
+    "Hosted deployment and recovery/backup verification remain pending.",
+    "Real email delivery and browser account creation are outside this workflow; signup is covered separately through the local Auth API.",
+    "Concurrency cases exercise the recorded request batches rather than an exhaustive load/stress test."
+  ]
+}

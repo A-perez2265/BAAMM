@@ -61,6 +61,7 @@ try {
     create table auth.users(id uuid primary key, email text, raw_user_meta_data jsonb default '{}');
     create table storage.buckets(id text primary key, name text, public boolean, file_size_limit bigint, allowed_mime_types text[]);
     create table storage.objects(id uuid default gen_random_uuid(), bucket_id text, name text);
+    alter table storage.objects enable row level security;
     create function storage.foldername(text) returns text[] language sql immutable as $$ select (string_to_array($1,'/'))[1:array_length(string_to_array($1,'/'),1)-1] $$;
     grant usage on schema public, auth, storage to anon, authenticated;
     grant execute on all functions in schema auth, storage to anon, authenticated;

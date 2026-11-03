@@ -46,3 +46,7 @@ The test creates a Teacher listing, discovers it as the learner, sends a request
 Runs use one worker and no automatic retry because confirmation spends a credit. Listings, exchanges and credit changes remain as test-environment audit history. Listings referenced by exchanges cannot be removed through the MVP. Authorize fixture retention and any environment reset before execution.
 
 The live workflow has not been executed against hosted Supabase in the recorded results. See [Testing](testing.md) for actual results and verification limits.
+
+## Recorded local integration
+
+The exchange workflow passed against Docker-backed Supabase on November 3, 2026. It used real local Auth and API calls, transferred one credit and verified persisted dashboard/ledger changes in independent browser sessions. See [the local verification record](verification/local-supabase-2026-11-03.json). Hosted acceptance remains unexecuted.

@@ -26,7 +26,12 @@ on conflict (id) do update set
   file_size_limit = 26214400,
   allowed_mime_types = array['video/mp4', 'video/webm', 'video/quicktime'];
 
-alter table storage.objects enable row level security;
+-- Supabase manages this table and enables RLS by default. Do not ALTER it.
+do $$ begin
+  if (select relrowsecurity from pg_class where oid = 'storage.objects'::regclass) is not true then
+    raise exception 'Storage RLS must already be enabled by the platform';
+  end if;
+end $$;
 
 -- Video uploads are deferred. Preserve existing files with restricted reads.
 drop policy if exists "verification_videos_auth_insert" on storage.objects;
