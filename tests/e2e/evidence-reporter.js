@@ -37,7 +37,9 @@ export default class EvidenceReporter {
     const metadata = { startedAt: this.startedAt, finishedAt: new Date().toISOString(),
       status: result.status, baseCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
       uncommittedChanges: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()),
-      scope: 'Browser UI checks. Regression project uses synthetic sessions and simulated Supabase; no real backend verification.',
+      scope: this.rows.some(row => row.project === 'live')
+        ? 'Live browser workflow against an explicitly configured Supabase test environment. Real authentication, fixture writes and credit transfers; signup and concurrent requests are outside this scenario.'
+        : 'Browser UI checks. Regression project uses synthetic sessions and simulated Supabase; no real backend verification.',
       rows: this.rows }
     const escape = value => value.replace(/\|/g, '\\|').replace(/\n/g, ' ')
     const lines = ['# Browser regression execution evidence', '',

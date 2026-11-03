@@ -1,5 +1,8 @@
 # SkillSwap - Profile and Skill Integration Test Matrix
 
+> Historical October 20 snapshot. See [the November 3 local verification](verification/local-supabase-2026-11-03.json) for the subsequent 15/15 API regression run after hardening, including denial of editable-metadata administrator escalation.
+
+
 **Last Updated:** 2026-10-20  
 **Integration Suite Run:** 2026-10-20 at 20:04:34 UTC  
 **Environment:** Local Supabase (`http://127.0.0.1:54321`)  

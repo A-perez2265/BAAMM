@@ -64,7 +64,7 @@ Inspect existing views, function ownership/execution grants, role memberships an
 6. Verify old public video URLs are denied, authorized private reads succeed and unrelated reads are denied over HTTP.
 7. Record migration hashes, environment, expected/actual results and sanitized evidence.
 
-The migration has been executed in local PostgreSQL tests. Hosted application, storage HTTP, email and concurrent-session acceptance have not been completed in the recorded November 3 results. Read-only inspection found trusted admin/signup definitions and the confirmation RPC installed, while the retained-video bucket was public. These observations describe configuration rather than hosted runtime certification.
+The migration has been executed in disposable PostgreSQL tests and applied to Docker-backed local Supabase. [Real local API/browser checks](verification/local-supabase-2026-11-03.json) passed, including concurrent settlements and Storage HTTP access. Hosted application, storage HTTP, email and concurrent-session acceptance have not been completed in the recorded November 3 results. Read-only inspection found trusted admin/signup definitions and the confirmation RPC installed, while the retained-video bucket was public. These observations describe configuration rather than hosted runtime certification.
 
 ## Recovery
 

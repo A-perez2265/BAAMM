@@ -33,6 +33,18 @@ The source baseline is `8084334` with uncommitted implementation changes. Machin
 | Hosted email and Storage HTTP | Correct recovery redirects and private object delivery | Not executed in this verification cycle | NOT RUN | [Deployment acceptance](database-deployment.md#post-deployment-verification) |
 | GitHub Actions execution for these changes | Required jobs pass on the reviewed PR | Changes have not been pushed; no hosted run is claimed | NOT RUN | [CI configuration](../.github/workflows/ci.yml) |
 
+## Docker-backed Supabase verification
+
+After synchronization to merged `main` at `7e994b9`, the local Supabase upgrade and integration checks passed with the recorded Storage compatibility fix:
+
+| Check | Actual result | Evidence |
+| --- | --- | --- |
+| Real Auth/Data API profiles and skills | 15/15 passed; generated account cleanup verified | [Local verification record](verification/local-supabase-2026-11-03.json) |
+| Exchange/dispute/concurrency/Storage APIs | 7/7 passed, including independent concurrent requests and private HTTP downloads | [Local verification record](verification/local-supabase-2026-11-03.json) |
+| Real two-user browser workflow | Listing → discovery → request → acceptance → completion → confirmation → refreshed balances/ledger passed | [Local verification record](verification/local-supabase-2026-11-03.json) |
+
+See [Local Supabase testing](local-supabase-testing.md) for reproducible commands, fixture retention and verification limits. These local results do not change the NOT RUN status of hosted acceptance above.
+
 ## Evidence boundaries
 
 Browser checks run real React components with synthetic sessions and intercepted requests. They establish UI behavior and simulated reload persistence, not real login, RLS, database persistence, credit settlement or production accessibility compliance.

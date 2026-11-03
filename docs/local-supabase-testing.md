@@ -1,53 +1,57 @@
-# SkillSwap - Local Supabase Integration Testing
+# Local Supabase integration testing
 
-**Last Updated:** 2026-10-20  
-**Scope:** Profiles and skill management.  
-**Outcome:** 14 PASSED; 1 AUTHORIZATION FAILURE
+## Environment
 
----
+These tests target Docker-backed Supabase at `http://127.0.0.1:54321`. The runners reject hosted URLs and read credentials only from ignored local runtime configuration. The ordinary clients exercise Auth, Data API and Storage through actual local services. The service-role client is limited to fixture provisioning, test-administrator metadata, readback and maintenance operations.
 
-## Section 1 — Environment
+Docker Desktop and the repository's Supabase CLI dependency are required. For an existing configured workspace:
 
-The suite uses Node.js assertions and `@supabase/supabase-js` against Docker-hosted PostgreSQL, Auth, and Data API services. Tests authenticate as ordinary users; the service-role client is restricted to fixture cleanup.
-
-The snapshot includes two tables, constraints, seven RLS policies, avatar selections, signup provisioning, public-text validation, and sensitive-field protection. Definitions were inspected through read-only dashboard access. No hosted records were copied or modified.
-
-Hosted grants, function permissions, configuration, and ownership were not fully exported. Local grants are explicit; function configuration follows repository SQL. Exchanges, disputes, reviews, notifications, and storage are excluded. Results do not establish full parity with the hosted project.
-
----
-
-## Section 2 — Execution
-
-Requires Docker Desktop, the installed Supabase CLI, and the existing local schema installation. From the repository root:
-
-```bash
+```sh
 ./node_modules/.bin/supabase start --workdir .local-supabase -x logflare,vector,edge-runtime,imgproxy,supavisor
-node tests/profile-and-skills.live.mjs
-```
-
-The script accepts only `http://127.0.0.1:54321` and reads credentials from the ignored `.local-supabase/runtime.json`. To refresh those credentials:
-
-```bash
 umask 077
 ./node_modules/.bin/supabase status --workdir .local-supabase -o json > .local-supabase/runtime.json
 ```
 
-Outputs: `test-results/profile-skills-live/latest.md` and `latest.json`. Failed assertions, incomplete execution, and cleanup errors produce a nonzero exit status. Three generated accounts are removed after execution; profile and skill deletion is verified.
+For a new workspace, initialize `.local-supabase` with the CLI and follow the [fresh database setup](../README.md#step-3--configure-the-database). An existing instance requires schema inspection before applying setup SQL. Do not reset a database or delete its volumes to bypass migration failures.
 
-Studio: `http://127.0.0.1:54323`. Stop services while retaining local data:
+Storage's `storage.objects` table is managed by Supabase. Setup verifies that its RLS is already enabled instead of attempting to alter the managed table. Fixture PostgreSQL tests explicitly model that platform default.
 
-```bash
-./node_modules/.bin/supabase stop --workdir .local-supabase
+## Profile and skill checks
+
+```sh
+node tests/profile-and-skills.live.mjs
 ```
 
-The schema and provenance files remain in ignored `.local-supabase/`. A fresh checkout requires that snapshot separately; the suite is not configured for CI. Application environment files retain their existing connection settings.
+The suite signs up three synthetic ordinary accounts, signs in through local Auth and verifies profile ownership, protected fields, skill ownership, validation and metadata-based administrator denial. It removes its generated accounts and verifies cleanup. No exchange history is created by this suite.
 
----
+Reports are generated in `test-results/profile-skills-live/` and remain ignored. [The recorded November 3 run](verification/local-supabase-2026-11-03.json) passed all 15 cases with verified cleanup.
 
-## Section 3 — Authorization Finding
+## Exchange, dispute, concurrency and Storage checks
 
-`LIVE-PRF-08` reproduced an administrator-classification defect: after setting editable Auth metadata to `is_admin: true` and refreshing the session, `public.is_admin()` returned `true`. Signup correctly initializes the profile admin flag to `false`, but the inspected admin-check function also trusts user metadata.
+```sh
+node tests/local-supabase-workflow.mjs
+npm run test:e2e:live
+```
 
-Privilege decisions should use administrator-controlled data. A fix and hosted verification remain pending; neither application authorization nor shared database policies were changed.
+The API runner creates separate synthetic fixtures for teacher, learner, reporting participant, trusted administrator and the browser workflow. It verifies:
 
-Evidence: [local integration results](profile-skill-live-results.md) and [mocked regression results](profile-skill-regression-results.md).
+- Real signup/login and denial of editable-metadata administrator escalation.
+- Safe public profiles and isolation of private balances.
+- Fixed one-credit settlement and sequential replay denial.
+- Five independent concurrent confirmation requests with one successful settlement.
+- Competing exchanges spending the final learner credit with one settlement and no negative balance.
+- Participant reporting, administrator authorization, required audit history and closure without payment.
+- A concurrent confirmation/reporting race with one valid outcome.
+- Denial of public Storage delivery, permitted uploader/admin downloads and unrelated-user denial.
+
+The runner writes local browser credentials to ignored `.env.e2e.local` and refuses to replace unrelated existing configuration. The browser test then uses independent teacher and learner contexts to create/discover a listing, request/accept/mark completion, confirm and verify exact persisted dashboard/ledger changes.
+
+Fixture accounts, exchange/dispute history and the retained test object remain in the local environment. Private credential files and raw reports are stored under ignored `.local-deliverables/supabase-tests/`. Do not commit them. Resetting or deleting retained fixtures requires a separate cleanup decision.
+
+## Recorded results and limits
+
+The [November 3 record](verification/local-supabase-2026-11-03.json) reports 15/15 profile/skill API cases, 7/7 workflow API cases and one complete browser workflow. It includes source hashes, environment, expected/actual results and before/after browser balances. These results apply to merged commit `7e994b9` plus the recorded uncommitted compatibility/test changes.
+
+The test environment was upgraded from an existing local profile/skill snapshot. It is not a complete export of hosted configuration. Results do not certify hosted grants, actual email delivery, production deployment or exhaustive stress/load behavior. Browser signup is not part of the exchange scenario; signup is exercised separately through the real local Auth API.
+
+The [October snapshot report](profile-skill-live-results.md) remains historical evidence of the earlier metadata defect. Its failure is superseded for the tested local configuration by the November 3 regression result; hosted acceptance remains separate.

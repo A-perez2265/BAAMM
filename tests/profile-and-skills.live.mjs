@@ -25,7 +25,7 @@ function unwrap({ data, error }) {
 }
 async function provision(label) {
   const api = client()
-  const suffix = randomBytes(8).toString('hex')
+  const suffix = [...randomBytes(12)].map(value => String.fromCharCode(97 + value % 26)).join('')
   const email = `local_${label}_${suffix}@example.test`
   const password = randomBytes(24).toString('base64url')
   const signup = unwrap(await api.auth.signUp({ email, password, options: { data: { username: `local_${suffix}`, display_name: `Local ${label}` } } }))
@@ -97,7 +97,8 @@ try {
       const before = await profile(a)
       const { error } = await a.api.from('profiles').update({ [field]: value }).eq('id', a.id).select()
       assert.ok(error, 'Sensitive-field update must be rejected.')
-      assert.match(error.message, /Only admins can change/)
+      assert.equal(error.code, '42501')
+      assert.match(error.message, /Only admins can change|permission denied/i)
       assert.deepEqual(await profile(a), before)
     })
   }
@@ -126,10 +127,10 @@ try {
     })
   })
   await check('LIVE-SKL-02', 'Skill insertion cannot spoof another owner', async () => {
-    const id = randomUUID()
-    const { error } = await a.api.from('skills').insert({ ...skillPayload(b), id })
+    const before = unwrap(await b.api.from('skills').select('id').eq('user_id', b.id))
+    const { error } = await a.api.from('skills').insert(skillPayload(b))
     assert.equal(error?.code, '42501')
-    assert.equal(unwrap(await b.api.from('skills').select('id').eq('id', id).maybeSingle()), null)
+    assert.deepEqual(unwrap(await b.api.from('skills').select('id').eq('user_id', b.id)), before)
   })
   for (const action of ['update', 'delete']) {
     await check(action === 'update' ? 'LIVE-SKL-03' : 'LIVE-SKL-04', `Cross-user skill ${action} is denied and preserves the record`, async () => {
@@ -151,17 +152,17 @@ try {
     })
   })
   await check('LIVE-SKL-06', 'Database rejects unsupported listing types', async () => {
-    const id = randomUUID()
-    const { error } = await a.api.from('skills').insert({ ...skillPayload(a), id, listing_type: 'Administrator' })
+    const before = unwrap(await a.api.from('skills').select('id').eq('user_id', a.id))
+    const { error } = await a.api.from('skills').insert({ ...skillPayload(a), listing_type: 'Administrator' })
     assert.equal(error?.code, '23514')
-    assert.equal(unwrap(await a.api.from('skills').select('id').eq('id', id).maybeSingle()), null)
+    assert.deepEqual(unwrap(await a.api.from('skills').select('id').eq('user_id', a.id)), before)
   })
   await check('LIVE-SKL-07', 'Direct skill API write cannot bypass email privacy validation', async () => {
-    const id = randomUUID()
-    const { error } = await a.api.from('skills').insert({ ...skillPayload(a), id, title: 'Contact member@example.test' })
+    const before = unwrap(await a.api.from('skills').select('id').eq('user_id', a.id))
+    const { error } = await a.api.from('skills').insert({ ...skillPayload(a), title: 'Contact member@example.test' })
     assert.equal(error?.code, '23514')
     assert.match(error.message, /PUBLIC_CONTACT_DETAILS/)
-    assert.equal(unwrap(await a.api.from('skills').select('id').eq('id', id).maybeSingle()), null)
+    assert.deepEqual(unwrap(await a.api.from('skills').select('id').eq('user_id', a.id)), before)
   })
   // Separate fixture: an unexpected privilege grant must not contaminate ordinary-user checks.
   await check('LIVE-PRF-08', 'User-editable metadata cannot grant administrator privileges', async () => {
@@ -184,7 +185,7 @@ try {
   }
   const report = {
     runId, startedAt, finishedAt: new Date().toISOString(), target: localUrl,
-    scope: 'Real local Supabase APIs against a scoped profile/skill snapshot; hosted database not tested.',
+    scope: 'Real local Supabase Auth and Data APIs with the MVP hardening migration; hosted database not tested.',
     results, setupError, cleanupErrors, fixturesRemoved: users.length - cleanupErrors.length,
   }
   await mkdir(reportDir, { recursive: true })
