@@ -17,59 +17,22 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'verification-videos',
   'verification-videos',
-  true,
+  false,
   26214400,
   array['video/mp4', 'video/webm', 'video/quicktime']
 )
 on conflict (id) do update set
-  public = true,
+  public = false,
   file_size_limit = 26214400,
   allowed_mime_types = array['video/mp4', 'video/webm', 'video/quicktime'];
 
 alter table storage.objects enable row level security;
 
+-- Video uploads are deferred. Preserve existing files with restricted reads.
 drop policy if exists "verification_videos_auth_insert" on storage.objects;
-create policy "verification_videos_auth_insert"
-on storage.objects
-for insert
-to authenticated
-with check (
-  bucket_id = 'verification-videos'
-  and (storage.foldername(name))[1] = auth.uid()::text
-);
-
 drop policy if exists "verification_videos_auth_update" on storage.objects;
-create policy "verification_videos_auth_update"
-on storage.objects
-for update
-to authenticated
-using (
-  bucket_id = 'verification-videos'
-  and (storage.foldername(name))[1] = auth.uid()::text
-)
-with check (
-  bucket_id = 'verification-videos'
-  and (storage.foldername(name))[1] = auth.uid()::text
-);
-
 drop policy if exists "verification_videos_auth_delete" on storage.objects;
-create policy "verification_videos_auth_delete"
-on storage.objects
-for delete
-to authenticated
-using (
-  bucket_id = 'verification-videos'
-  and (storage.foldername(name))[1] = auth.uid()::text
-);
-
 drop policy if exists "verification_videos_public_select" on storage.objects;
-create policy "verification_videos_public_select"
-on storage.objects
-for select
-to public
-using (
-  bucket_id = 'verification-videos'
-);
 
 create or replace function public.handle_new_user()
 returns trigger
@@ -81,8 +44,6 @@ declare
   v_username text;
   v_display_name text;
   v_general_location text;
-  v_video_link text;
-  v_is_admin boolean;
 begin
   v_username := coalesce(
     nullif(trim(new.raw_user_meta_data->>'username'), ''),
@@ -99,8 +60,6 @@ begin
     nullif(trim(new.raw_user_meta_data->>'general_location'), ''),
     nullif(trim(new.raw_user_meta_data->>'location'), '')
   );
-  v_video_link := nullif(trim(new.raw_user_meta_data->>'verification_video_link'), '');
-  v_is_admin := coalesce((new.raw_user_meta_data->>'is_admin')::boolean, false);
 
   insert into public.profiles (
     id,
@@ -118,9 +77,9 @@ begin
     v_display_name,
     v_general_location,
     v_general_location,
-    v_video_link,
+    null,
     3, 
-    v_is_admin,
+    false,
     now()
   )
   on conflict (id) do update set
@@ -146,15 +105,7 @@ security definer
 stable
 set search_path = public
 as $$
-  select coalesce(
-    (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin'),
-    (auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean,
-    exists (
-      select 1 from public.profiles
-      where id = auth.uid() and is_admin = true
-    ),
-    false
-  );
+  select coalesce((auth.jwt() -> 'app_metadata' ->> 'is_admin') = 'true', false);
 $$;
 
 do $$

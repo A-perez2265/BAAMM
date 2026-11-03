@@ -61,6 +61,7 @@ try {
   assert.equal(calls.at(-1)[0], 'single')
   calls = []
   await getProfile('member')
+  assert.deepEqual(calls.find(([method]) => method === 'from'), ['from', 'public_profiles'])
   assert.equal(calls.find(([method]) => method === 'select')[1], 'id, display_name, username, bio, location, avatar_id')
   assert.deepEqual(calls.find(([method]) => method === 'eq'), ['eq', 'id', 'member'])
   calls = []

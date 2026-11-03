@@ -194,9 +194,9 @@ export default function Auth({ children, onAuthSuccess }) {
               setIsSignUp(false);
               resetForm();
             }}
-            onRegisterSuccess={() => {
+            onRegisterSuccess={(_user, message) => {
               setIsSignUp(false);
-              setSuccessMessage('Registration successful! Please sign in with your credentials.');
+              setSuccessMessage(message);
             }}
           />
         ) : (

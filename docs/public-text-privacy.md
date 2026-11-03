@@ -1,5 +1,7 @@
 # Public profile and skill text privacy
 
+For public field lists, ownership boundaries, dated test evidence and outstanding database checks, see [Profile and skill privacy: controls and evidence](profile-skill-security.md).
+
 The local app rejects recognizable email addresses, phone numbers (7 or more digits with common separators), numbered street addresses, and PO boxes in saved public profile and skill fields. The checks run in form validation and again in save services. Normalization also handles full-width characters, invisible separators, hashtags, and common [at]/[dot] disguises.
 
 Apply `supabase/public_text_privacy.sql` in the team's Supabase SQL editor to enforce the same policy on database inserts and updates. This migration has not been applied or tested against the live database. It does not alter ownership policies or inspect private authentication email fields. Test ordinary-user direct inserts and updates after applying it, including contact details in tags. Existing records are not automatically cleaned; an existing record containing blocked text must be cleaned before it can be updated.

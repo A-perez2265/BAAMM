@@ -16,6 +16,13 @@ dist
 dist-ssr
 *.local
 
+# Local browser binaries, reports and potentially sensitive authentication traces
+.cache/ms-playwright/
+playwright-report/
+test-results/
+playwright/.auth/
+.local-supabase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -26,3 +33,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local database CLI state
+supabase/.temp/
+
+# Local submission material and private review notes
+.local-deliverables/
+
+# Environment files; only empty public templates belong in the repository
+.env*
+!.env.example
+!.env.e2e.example

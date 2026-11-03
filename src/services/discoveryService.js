@@ -38,7 +38,7 @@ export async function getDiscoverableSkills(currentUserId) {
   }
 
   const { data: profiles, error: profileError } = await supabase
-    .from('profiles')
+    .from('public_profiles')
     .select('id, display_name, username')
     .in('id', teacherIds)
 

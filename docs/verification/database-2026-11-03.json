@@ -1,0 +1,110 @@
+{
+  "startedAt": "2026-11-03T19:12:24.708Z",
+  "finishedAt": "2026-11-03T19:12:27.426Z",
+  "scope": "Disposable PostgreSQL with fixture Auth/Storage schemas. No hosted configuration, real authentication, HTTP storage access, or concurrent-session verification.",
+  "migrations": {
+    "base_schema.sql": "c3cfc270fd4e2c1b352e6faae9dd01f397357ba50e55a02613620a7239ffa18b",
+    "exchanges.sql": "9f12f2a6370c27b665008798e39433502e394369a2a92d901e3ad5a6c9ce8eaa",
+    "profile_avatars.sql": "b6c5b32c4bd730997863fadc94c5789b226b16ef939752a9f4cd125cdf4e2109",
+    "disputes_and_verification.sql": "c91d2c8e1a964e8fb9eaa55044b475ff03f461f7cc6e8b54e6a8a40311ad005d",
+    "dispute_actions.sql": "935412788b8e0e0b542f42a721896bc9167e1d7e0e74e28de3bf99ea37c51221",
+    "confirm_skill_exchange.sql": "e8936e40a0aa8496e523437334b53073d0c86f673f49db2059a02e9b498767a8",
+    "profile_credit_transfers.sql": "37a6617808d8c21855ddc57aa184bdb023f9f80d018b27e81542b87e14c7b62a",
+    "public_text_privacy.sql": "37a39e9022c7a5c3b33e912afbfae915b320e94f3c25fa39440a4bb1e72fe88b",
+    "admin_grant_credits.sql": "fa1ed8645cf1db328cd0440c189f51d9ba34e40ca21840e80e9732c02c0ad46b",
+    "mvp_security_hardening.sql": "93b0953e27a75e3d8253cdfc0afd697bc0d19f32697f993e78d801eea1331748"
+  },
+  "cases": [
+    {
+      "id": "DB-SETUP",
+      "expected": "Fresh-project SQL applies in the documented order",
+      "actual": "All 10 SQL files executed successfully",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-SIGNUP",
+      "expected": "Signup grants three credits and ignores editable administrator metadata",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-ADMIN",
+      "expected": "User metadata cannot make is_admin() true",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-PRIVATE",
+      "expected": "Own private profile readable; another user\u2019s balance hidden; safe portfolio visible",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-PROFILE-WRITES",
+      "expected": "Own safe edit succeeds; direct credit/admin changes and cross-user edits fail",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-OWNERSHIP",
+      "expected": "Cross-user skill mutation and ownership reassignment are blocked",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-REQUEST",
+      "expected": "Request requires funds and a real teacher listing owned by the named teacher",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-STATES",
+      "expected": "Only teacher accepts/completes; direct settlement and participant changes fail",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-SETTLEMENT",
+      "expected": "Only learner settles; one credit moves; replay fails without balance changes",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-HISTORY",
+      "expected": "A skill with retained exchange history cannot be removed",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-DISPUTE-ROLLBACK",
+      "expected": "Failure to block exchange rolls back dispute insertion",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-DISPUTE",
+      "expected": "Either participant reports once; confirmation is blocked without changing balances",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-AUDIT-ROLLBACK",
+      "expected": "Audit insertion failure rolls back administrator resolution",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-RESOLUTION",
+      "expected": "Admin explanation required; closure audited once with no credit transfer or reopening",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    },
+    {
+      "id": "DB-VIDEO",
+      "expected": "Bucket private; uploader/admin reads allowed; other users and anonymous RPC denied",
+      "actual": "All assertions passed",
+      "status": "PASS"
+    }
+  ],
+  "test_source_sha256": "ba10a1048e3735b18a8af8eaf2b57679981e9c8f61420b7376f18e6c50c0ffd2"
+}

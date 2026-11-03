@@ -1,6 +1,7 @@
 # Admin Auth Security Fix
 
 **Date:** 2026-10-20  
+**November 3 reconciliation:** The hosted `is_admin()` and signup trigger were inspected read-only. Repository setup SQL now ignores editable administrator metadata; the candidate migration repeats these controls for an existing project. Current deployment status is in [Database deployment](database-deployment.md).
 **Severity:** Critical — privilege escalation, any authenticated user could access the admin dashboard
 
 ---

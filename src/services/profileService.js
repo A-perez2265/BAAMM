@@ -8,10 +8,10 @@ const publicFields = `${legacyFields}, avatar_id`
 const missingAvatarColumn = error => ['42703', 'PGRST204'].includes(error?.code) && /avatar_id/i.test(error.message || '')
 
 export async function getProfile(userId) {
-  let { data, error } = await supabase.from('profiles')
+  let { data, error } = await supabase.from('public_profiles')
     .select(publicFields).eq('id', userId).single()
   if (missingAvatarColumn(error)) {
-    ({ data, error } = await supabase.from('profiles').select(legacyFields).eq('id', userId).single())
+    ({ data, error } = await supabase.from('public_profiles').select(legacyFields).eq('id', userId).single())
   }
   if (error) throw error
   return data
