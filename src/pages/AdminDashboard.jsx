@@ -1,12 +1,11 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -16,6 +15,8 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const [explanations, setExplanations] = useState({});
+  const [actionId, setActionId] = useState(null);
 
   // 1. Verify Admin Access — authoritative server-side check via Supabase RPC.
   //    We do NOT rely on user_metadata (user-editable) or the public profiles
@@ -33,8 +34,6 @@ export default function AdminDashboard() {
           setCheckingAuth(false);
           return;
         }
-
-        setCurrentUser(session.user);
 
         // Call the server-side RPC; result is boolean or null on error.
         const { data: adminFlag, error } = await supabase.rpc('is_admin');
@@ -115,24 +114,6 @@ export default function AdminDashboard() {
     };
   }, [isAdmin, fetchDisputes]);
 
-  const actorLabel = currentUser?.email || 'admin';
-
-  const logDisputeAction = async (disputeId, action, detail) => {
-    if (!currentUser?.id) {
-      throw new Error('Not signed in');
-    }
-
-    const { error } = await supabase.from('dispute_actions').insert({
-      dispute_id: disputeId,
-      actor_id: currentUser.id,
-      actor_label: actorLabel,
-      action,
-      detail,
-    });
-
-    if (error) throw error;
-  };
-
   const handleUpdateStatus = async (dispute, newStatus) => {
     setActionError('');
     setActionSuccess('');
@@ -148,44 +129,28 @@ export default function AdminDashboard() {
       return;
     }
 
+    const explanation = (explanations[dispute.id] || '').trim();
+    if (explanation.length < 15 || explanation.length > 2000) {
+      setActionError('Enter an explanation between 15 and 2000 characters.');
+      return;
+    }
+    if (actionId) return;
+    setActionId(dispute.id);
     try {
-      const { error } = await supabase
-        .from('disputes')
-        .update({ status: newStatus })
-        .eq('id', dispute.id);
-
+      const { error } = await supabase.rpc('review_skill_dispute', {
+        p_dispute_id: dispute.id,
+        p_status: newStatus,
+        p_explanation: explanation,
+      });
       if (error) throw error;
-
-      const fromLabel = (dispute.status || 'open').replace('_', ' ');
-      const toLabel = newStatus.replace('_', ' ');
-      const detail =
-        newStatus === 'resolved'
-          ? 'Closed without transferring credits. Exchange remains issue_reported.'
-          : `Changed status from ${fromLabel} to ${toLabel}.`;
-
-      let historyNote = '';
-      try {
-        await logDisputeAction(dispute.id, 'status_changed', detail);
-        await fetchDisputes({ silent: true });
-      } catch (historyError) {
-        console.error('Ticket history was not saved:', historyError);
-        historyNote =
-          ' History was not saved — run the dispute_actions SQL if you have not yet.';
-        setDisputes((prev) =>
-          prev.map((d) =>
-            d.id === dispute.id ? { ...d, status: newStatus } : d
-          )
-        );
-      }
-
-      const success =
-        newStatus === 'resolved'
-          ? 'Closed without transferring credits.'
-          : `Ticket status updated to "${toLabel}".`;
-      setActionSuccess(success + historyNote);
+      await fetchDisputes({ silent: true });
+      setActionSuccess(newStatus === 'resolved'
+        ? 'Closed without payment. The explanation was saved to the audit history.'
+        : 'Case marked under review. The explanation was saved to the audit history.');
     } catch (err) {
-      console.error('Status update failed:', err);
-      setActionError('Failed to update status: ' + err.message);
+      setActionError('Status update failed: ' + err.message);
+    } finally {
+      setActionId(null);
     }
   };
 
@@ -481,12 +446,24 @@ export default function AdminDashboard() {
                   </p>
                 ) : (
                   <>
-                    <span className="actions-label">Admin actions:</span>
+                    <label className="actions-label" htmlFor={`explanation-${dispute.id}`}>
+                      Review or closure explanation
+                    </label>
+                    <textarea
+                      id={`explanation-${dispute.id}`}
+                      value={explanations[dispute.id] || ''}
+                      onChange={(event) => setExplanations((current) => ({ ...current, [dispute.id]: event.target.value }))}
+                      minLength={15}
+                      maxLength={2000}
+                      disabled={Boolean(actionId)}
+                      rows={3}
+                    />
                     <div className="action-button-group">
                       {dispute.status !== 'under_review' && (
                         <button
                           type="button"
                           className="btn-status btn-review"
+                          disabled={Boolean(actionId)}
                           onClick={() => handleUpdateStatus(dispute, 'under_review')}
                         >
                           Mark Under Review
@@ -495,6 +472,7 @@ export default function AdminDashboard() {
                       <button
                         type="button"
                         className="btn-status btn-resolve"
+                        disabled={Boolean(actionId)}
                         onClick={() => handleUpdateStatus(dispute, 'resolved')}
                       >
                         Close without payment

@@ -587,3 +587,14 @@
   animation: spin 0.8s linear infinite;
   margin: 0 auto 1rem auto;
 }
+
+.dispute-card-actions textarea {
+  flex-basis: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  resize: vertical;
+}

@@ -45,6 +45,21 @@ try {
   assert.deepEqual(await discovery.getDiscoverableSkills('learner'), [skill])
   assert.ok(calls.some(([method, column, value]) => method === 'eq' && column === 'listing_type' && value === 'Teacher'))
   assert.ok(calls.some(([method, column, value]) => method === 'neq' && column === 'user_id' && value === 'learner'))
+  // Teacher-name hydration must use the safe view, including with owner-only profile RLS.
+  calls = []
+  const teacher = { id: 'teacher', display_name: 'Art Teacher', username: 'art.teacher' }
+  const teacherListing = { ...skill, user_id: 'teacher' }
+  tableResponses = { skills: { data: [teacherListing], error: null }, public_profiles: { data: [teacher], error: null } }
+  assert.deepEqual(await discovery.getDiscoverableSkills('learner'), [{ ...teacherListing, teacher }])
+  assert.ok(calls.some(([method, table]) => method === 'from' && table === 'public_profiles'))
+  assert.equal(calls.some(([method, table]) => method === 'from' && table === 'profiles'), false)
+  assert.ok(calls.some(([method, fields]) => method === 'select' && fields === 'id, display_name, username'))
+  assert.equal(discovery.teacherDisplayName(teacher), 'Art Teacher')
+  assert.equal(discovery.teacherDisplayName({ username: 'art.teacher' }), 'art.teacher')
+  assert.equal(discovery.teacherDisplayName(null), '')
+  tableResponses.public_profiles = { data: null, error: { message: 'Profile lookup unavailable' } }
+  assert.deepEqual(await discovery.getDiscoverableSkills('learner'), [{ ...teacherListing, teacher: null }])
+  tableResponses = {}
   response = { data: null, error: { message: 'Listings unavailable' } }
   await assert.rejects(discovery.getDiscoverableSkills('learner'), error => error.message === 'Listings unavailable')
 
@@ -94,7 +109,7 @@ try {
     await assert.rejects(exchange.confirmExchange({ exchangeId: 'request' }), failure => failure === error)
     assert.deepEqual(calls, [['rpc', 'confirm_skill_exchange', { p_exchange_id: 'request' }]])
   }
-  console.log('Passed: discovery filtering, teacher-only listings, request validation, ownership/status guards, exact confirmation RPC, and failure propagation without a status-only fallback. Database calls were simulated.')
+  console.log('Passed: discovery filtering, safe teacher-profile hydration and fallback, teacher-only listings, request validation, ownership/status guards, exact confirmation RPC, and failure propagation without a status-only fallback. Database calls were simulated.')
 } finally {
   await server.close()
   delete globalThis.__exchangeTestClient

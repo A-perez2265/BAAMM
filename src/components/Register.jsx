@@ -1,11 +1,7 @@
 // src/components/Register.jsx
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import './Register.css';
-
-const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
-const ALLOWED_MIME_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
-const ALLOWED_EXTENSIONS = ['.mp4', '.webm', '.mov'];
 
 export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
   // Form fields
@@ -15,21 +11,16 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [location, setLocation] = useState('');
-  const [videoFile, setVideoFile] = useState(null);
-  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
 
   // Field validation and async states
   const [usernameChecking, setUsernameChecking] = useState(false);
   const [serverUsernameStatus, setServerUsernameStatus] = useState(null); // { available: boolean, message: string }
-  const [fileError, setFileError] = useState('');
 
   // Submission pipeline states
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const fileInputRef = useRef(null);
 
   // Live password strength criteria derived directly during render
   const passwordCriteria = {
@@ -53,15 +44,6 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
   const usernameStatus = formatError
     ? { available: false, message: formatError }
     : serverUsernameStatus;
-
-  // Clean up object URL when component unmounts or video changes
-  useEffect(() => {
-    return () => {
-      if (videoPreviewUrl) {
-        URL.revokeObjectURL(videoPreviewUrl);
-      }
-    };
-  }, [videoPreviewUrl]);
 
   // Debounced username availability checker against database
   useEffect(() => {
@@ -109,65 +91,11 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
     };
   }, [username]);
 
-  // Validate and handle file input
-  const handleFileChange = (e) => {
-    setFileError('');
-    const file = e.target.files?.[0];
-
-    if (!file) {
-      setVideoFile(null);
-      if (videoPreviewUrl) {
-        URL.revokeObjectURL(videoPreviewUrl);
-        setVideoPreviewUrl(null);
-      }
-      return;
-    }
-
-    // Check extension
-    const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
-    const isValidExt = ALLOWED_EXTENSIONS.includes(extension);
-    const isValidMime = ALLOWED_MIME_TYPES.includes(file.type);
-
-    if (!isValidExt && !isValidMime) {
-      setFileError('Invalid format. Please upload an MP4, WebM, or MOV video.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setVideoFile(null);
-      return;
-    }
-
-    // Check file size (<= 25MB)
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      setFileError(`File is too large (${sizeMB} MB). Maximum allowed size is 25 MB.`);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      setVideoFile(null);
-      return;
-    }
-
-    // Valid file
-    setVideoFile(file);
-    if (videoPreviewUrl) {
-      URL.revokeObjectURL(videoPreviewUrl);
-    }
-    setVideoPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const handleRemoveFile = () => {
-    setVideoFile(null);
-    if (videoPreviewUrl) {
-      URL.revokeObjectURL(videoPreviewUrl);
-      setVideoPreviewUrl(null);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    setFileError('');
-  };
-
   const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -189,12 +117,6 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
 
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
-      return;
-    }
-
-    if (!videoFile) {
-      setFileError('A verification video demo is required to complete onboarding.');
-      setErrorMessage('Please attach your skill verification video.');
       return;
     }
 
@@ -222,59 +144,11 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
         throw new Error('Sign up could not be completed. Please try again.');
       }
 
-      // Step 2: Upload Video to verification-videos Storage Bucket
-      setCurrentStep('Uploading skill verification video (this may take a few moments)...');
-      const sanitizedName = videoFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const storageFilePath = `${registeredUser.id}/${Date.now()}_${sanitizedName}`;
+      const message = authData.session
+        ? 'Account created. Your profile starts with 3 platform credits.'
+        : 'Account created. Check your email to confirm your address, then sign in. Your profile starts with 3 platform credits.';
+      setSuccessMessage(message);
 
-      const { error: uploadError } = await supabase.storage
-        .from('verification-videos')
-        .upload(storageFilePath, videoFile, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: videoFile.type || 'video/mp4',
-        });
-
-      if (uploadError) {
-        console.warn('Storage upload encountered an issue:', uploadError);
-        // Note: Profile was already created by trigger. Provide helpful message
-        setErrorMessage(
-          `Account created, but video upload failed: ${uploadError.message}. You can re-upload your verification video in your Profile settings.`
-        );
-        return;
-      }
-
-      // Step 3: Retrieve Public Storage URL
-      setCurrentStep('Generating public verification link...');
-      const { data: urlData } = supabase.storage
-        .from('verification-videos')
-        .getPublicUrl(storageFilePath);
-
-      const publicVideoUrl = urlData?.publicUrl || '';
-
-      // Step 4: Attach video link to Profile & Auth Metadata
-      setCurrentStep('Finalizing profile verification...');
-      if (publicVideoUrl) {
-        const { error: profileUpdateError } = await supabase
-          .from('profiles')
-          .update({ verification_video_link: publicVideoUrl })
-          .eq('id', registeredUser.id);
-
-        if (profileUpdateError) {
-          console.warn('Profile video link update error:', profileUpdateError);
-        }
-
-        // Also update user metadata for consistency
-        await supabase.auth.updateUser({
-          data: { verification_video_link: publicVideoUrl },
-        });
-      }
-
-      // Step 5: Success
-      setSuccessMessage(
-        'Account successfully registered! 3 Starter time-credits granted. You can now sign in.'
-      );
-      
       // Reset form
       setEmail('');
       setPassword('');
@@ -282,10 +156,9 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
       setUsername('');
       setDisplayName('');
       setLocation('');
-      handleRemoveFile();
 
       if (onRegisterSuccess) {
-        onRegisterSuccess(registeredUser);
+        onRegisterSuccess(registeredUser, message);
       }
     } catch (err) {
       console.error('Registration pipeline error:', err);
@@ -300,7 +173,7 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
     <div className="register-card" role="region" aria-label="Registration Form">
       <h2 className="register-title">Create your SkillSwap Account</h2>
       <p className="register-subtitle">
-        Join our decentralized skill exchange community. New accounts start with 3 free platform credits!
+        Learn and teach with our skill exchange community. New accounts start with 3 free platform credits!
       </p>
 
       {errorMessage && (
@@ -484,70 +357,6 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
           )}
         </div>
 
-        {/* Video Upload Field */}
-        <div className="register-form-group">
-          <label className="register-label" htmlFor="reg-video-file">
-            Instructor Skill Verification Video <span className="required-star">*</span>
-          </label>
-          <p className="field-hint">
-            Upload a brief video demonstrating or introducing your skill (MP4 or WebM, max 25 MB). This video is viewable by community members to verify credibility.
-          </p>
-
-          <div className="file-upload-zone">
-            <input
-              id="reg-video-file"
-              ref={fileInputRef}
-              type="file"
-              accept=".mp4,.webm,.mov,video/mp4,video/webm,video/quicktime"
-              onChange={handleFileChange}
-              disabled={loading}
-              className="file-hidden-input"
-            />
-            {!videoFile ? (
-              <label htmlFor="reg-video-file" className="file-drop-label">
-                <span className="file-icon">📹</span>
-                <span className="file-primary-text">Click to browse or drop verification video</span>
-                <span className="file-sub-text">MP4 or WebM up to 25 MB</span>
-              </label>
-            ) : (
-              <div className="file-selected-card">
-                <div className="file-meta">
-                  <span className="file-name">{videoFile.name}</span>
-                  <span className="file-size">
-                    {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
-                  </span>
-                </div>
-
-                {videoPreviewUrl && (
-                  <div className="video-preview-wrapper">
-                    <video
-                      src={videoPreviewUrl}
-                      controls
-                      className="video-player-preview"
-                      preload="metadata"
-                    />
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  disabled={loading}
-                  className="btn-remove-file"
-                >
-                  Remove Video
-                </button>
-              </div>
-            )}
-          </div>
-
-          {fileError && (
-            <div className="register-status-badge status-danger" role="alert">
-              ✗ {fileError}
-            </div>
-          )}
-        </div>
-
         {/* Progress Pipeline Indicator */}
         {loading && (
           <div className="register-pipeline-progress">
@@ -562,7 +371,7 @@ export default function Register({ onSwitchToLogin, onRegisterSuccess }) {
           disabled={loading || (usernameStatus && !usernameStatus.available)}
           className="register-btn-submit"
         >
-          {loading ? 'Processing Onboarding...' : 'Create Account & Claim Credit'}
+          {loading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
 

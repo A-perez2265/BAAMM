@@ -1,0 +1,276 @@
+{
+  "startedAt": "2026-11-03T18:59:15.004Z",
+  "finishedAt": "2026-11-03T19:00:01.605Z",
+  "status": "passed",
+  "baseCommit": "8084334708c3bfa485f70ad5b31a2c387ba5a90e",
+  "uncommittedChanges": true,
+  "scope": "Browser UI checks. Regression project uses synthetic sessions and simulated Supabase; no real backend verification.",
+  "source_files_sha256": {
+    "package-lock.json": "9dae426d6aace24daf4ef103a8f1c20a2e7fbb530a493327a95aab2c67e34872",
+    "package.json": "f3d79047043348118a62c45a2b6ece2e8103112b263f538ef3084cbf74c9fdee",
+    "playwright.config.js": "7b476c3c65aed89e94eca2686492a778f68c227733fad1d455b9099a1e745288",
+    "src/.DS_Store": "c547c0d2e8996b6fbbcb18c880c9282da729725f1b5907918c02beaa57b346a1",
+    "src/App.css": "e448f72ef796eddaecc91bc91fdf2d9bcc7671ab8366873f781f5f0006b9672b",
+    "src/App.jsx": "5d7439288a413c80dfa8a0d45cd2434c1e3da3d209f7aa7b05060b1e4ac147cd",
+    "src/assets/avatars/animals-01-25-white.png": "d02c888c95d32195db0de6e7da6a11b44b9386b8dcdfb4403e17da0c71afeacd",
+    "src/assets/avatars/animals-26-34-white.png": "204c0083b80cc879e669785176ae19fc89dfdeeba6ee7833667f278a8a41a712",
+    "src/assets/avatars/dragon-white.png": "daf81ef87de8c958fb0988fae979c826e1fae5a61d9c9b8a931dab21e58d588a",
+    "src/assets/skillswap-logo-maroon.png": "2e57ab56eba8c3e4ebfee67b5dbbf53b217b953c7a2535146beb730e4a38e948",
+    "src/assets/skillswap-logo-sans.png": "0c076ba99b76ca5466e5c322d3bbb385244eca8a85ee8629c047d17cc07ed490",
+    "src/assets/skillswap-logo.png": "78314aecb0e605f53f2c54f9ad5b800493a4e563cbb30327afba0c70c9dec071",
+    "src/components/ActivityFeed.jsx": "3d5f8a7b208fe3bc58ef15f42b70c74bff2372924d718f31114db73a90a4d8d2",
+    "src/components/Alerts.jsx": "0b5dd390fcf347b0e184fbaed81cb727b6419638d9cd26d579eeee8bdf5b7f84",
+    "src/components/Auth.css": "20980bd97c50ca2a7cea7db788ddfd7b3f0c81778923abf3f2bf181f2deee19e",
+    "src/components/Auth.jsx": "baebc96e019472c26605c2f8bba17c0a61e4195ed6a1a829aa54e4c737286225",
+    "src/components/AvatarPicker.jsx": "5d5a35765da8d05f3a84f873729b9d80b075c2cb0e192afd0b7312d07a0cc83a",
+    "src/components/BrandLogo.jsx": "5ce1763281484c93f074fdc08c0959e37d3425a14e5b83170014d452826fb6d7",
+    "src/components/CommunityIcon.jsx": "d15fd1fb6916c007b88a30b7e2823cbe23bab184328b9831ab47d5d83eb08a7c",
+    "src/components/DisputeModal.css": "fc7449db4893ea3e5b731f4583f644d524e8283ab1ad48b2230fcc8a94c3caa5",
+    "src/components/DisputeModal.jsx": "fb5342af804f38524a9ff172b269d3b6ccbe9a1fdea3efecdae392402559cb7f",
+    "src/components/ErrorBoundary.jsx": "67866e9f13622277b706ec95ffff154ba48889dd3b91bd82470490aafafff0df",
+    "src/components/Footer.css": "04ba05e2801182ce7b4df245bcc660b7707c88b0bb6ed94f9331b59c2d9eb91a",
+    "src/components/Footer.jsx": "630f4d2349457692e03ce11845fe176b1d7c81f8356ef82bed76bb89345faf8b",
+    "src/components/ProfileAvatar.jsx": "0b57fd55f73cf07e57c1201e870d4b2516bcc4ac5d48525a14107a31993132a2",
+    "src/components/Register.css": "bb8f6ea8d167a9aa97ff289f7a4d44f1de5d51edb0f3a5e83e3a81e842364679",
+    "src/components/Register.jsx": "5a0ecbaddf02e68bf9ca868a33c305b14ba4a9f22132ae8f414219f1a00edac1",
+    "src/components/search/SearchBar.css": "8ac9f5a076406694a3a52a2fdc17f55a4a0a271ea4f560b13b93dfe862b87ce7",
+    "src/components/search/SearchBar.jsx": "2959487de2310c47e77a9f1eda6fca0bff82969dea7c562e02ab9c27e21ab87a",
+    "src/components/search/SearchFilters.css": "f1bdecb3b24db6a9e18060621f2f1af06381bc244728a5e0642499012e5390d2",
+    "src/components/search/SearchFilters.jsx": "0261460239ce0d64c538d78df51b1441d481b3c00238ed9eea2029750ecfd24e",
+    "src/components/skills/SkillCard.jsx": "495119ed6695c42f9748a3d921e2d90230d1103654938a63471def58ca101368",
+    "src/components/skills/SkillFilters.jsx": "313110b3388849938eecfe5eb82615a810dd234b765730617afa8c1974b748a1",
+    "src/components/skills/SkillForm.jsx": "b173d784f2115bfe9d5e59fc2a8982a8130c1c9774b23dde6a53f1df6e4f2839",
+    "src/constants/avatarOptions.js": "d6f7aec73e0a6bd1593f1718512bc237928ae7bd797dc3f4c955019b6586bf93",
+    "src/constants/exchangeStatus.js": "e065e047da6c9e82c17e1fd47299599516f3777b5677eb3906efcfa5efc53fb8",
+    "src/constants/skillIcons.js": "184125ec85c71d0d3c8bc9695d1fd0d5329e06c166b2545e2319048323d1cdfc",
+    "src/constants/skillOptions.js": "76bb2ca043cc5ba2a0b1c0e5590660ed6c84169464905f7a5f6733300f96fcef",
+    "src/index.css": "4ebca23bd302e87cc48bf6ab4dde0adb977e388e6a0c0aa28f3ef1c0647f5465",
+    "src/main.jsx": "e13c284ec03710580ea094f0489c7c0f02b5b6db8f0840449226f3d2aecf85d2",
+    "src/pages/AdminDashboard.css": "078b5a1da52a89a08250f1f9e2812d160708f9f05c851503560e178ef36574be",
+    "src/pages/AdminDashboard.jsx": "07fd82f886d1b903d171d7895d2d147e27d8b4cdc945dcbad5aa863fa49f5638",
+    "src/pages/ConfirmExchangesPage.css": "cbcc9174111cbddb9582c064b6afb9b8de7104e0f2453322f6c578c733e236d8",
+    "src/pages/ConfirmExchangesPage.jsx": "d86817f8580c47fac2a7fcd929c0dd0eb9ff0c251767595d0f43ce566c4bd8b9",
+    "src/pages/DashboardPage.css": "6c3a7a5e2dad173c476340fbd94b9d8a960f119a153f6a0a7ccd06b771ec4a9e",
+    "src/pages/DashboardPage.jsx": "397dff64a624d4f479973a137131b25c20f39465af0ec68b2046c81e6602ccca",
+    "src/pages/IncomingRequestsPage.css": "a03d793f6490c1d5b5a75d8bd018541e82a6bfdad04c692378f0dc5503d2199b",
+    "src/pages/IncomingRequestsPage.jsx": "f75f2eda88a5e20a8740b7303c4c8ec712ce5db60429285f65ce3988a873a507",
+    "src/pages/PasswordRecoveryPage.jsx": "d25952b8ccd6c9add5b1331d0c479048786f3d979c33b5096b198f7ae6e47d30",
+    "src/pages/ProfilePage.jsx": "d34363652ce8a1296b5704c3ffd9fda856d9c522f726bb31776c3f524ca61cea",
+    "src/pages/RequestExchangePage.css": "d1642e611b9c6da66bd120b7751b7b9b77810607ab47c79133324c15d1aa7461",
+    "src/pages/RequestExchangePage.jsx": "1d51b97e86e5ebec03a82cb9d09472741cf7a8e1addce47dbc4166d4d5f2370e",
+    "src/pages/SearchPage.css": "2137c972816ef29368b6ee81ba55ebb8a4447c0f67eff50d8d4b0e856e43dde8",
+    "src/pages/SearchPage.jsx": "4068eaffa32eb48d45bbda8ca12911d88d4e2c77f98cac5a5f17c1220cbb3530",
+    "src/pages/SkillManagementPage.jsx": "467eb76ebfe8c6c20b01dc3050ec83b63f4546ec30e3211e28be6a2ae51ac69a",
+    "src/services/discoveryService.js": "f5b267c4b2c501d2d2e545ea68a3bd6170ad3b1347f29a21a33050eaaa8bb6dd",
+    "src/services/exchangeService.js": "a32ffdc5c3eace93d0cea38c8520bd9ecf81b4233cedce8c3dd7d307cfaca491",
+    "src/services/passwordRecoveryService.js": "b9d04ac8299dadf3515d2899218f67be915f0aeeb804955dd3bc8e8f5cfb394d",
+    "src/services/profileService.js": "a574a95d7f3da0ae0606349d83b852ba55197c0438b22747a83160045783f78e",
+    "src/services/skillService.js": "470ac86ecff2cdcccd47cbe30ec8f7e1c43c2b009e2ae922bb6e3762a360f1b8",
+    "src/utils/profileUtils.js": "0472e9335b54a7368bf77ab76209d60d0969f7f11fab4911ffa2e53e9895a767",
+    "src/utils/publicTextPrivacy.js": "17ea602f478eca1551cb7f71f36527e7a8aadcc05411336c65863bb052143d07",
+    "src/utils/skillUtils.js": "fb93d46e9d44a2f5adb6acde65a71250002fa409b3879d935d17a3892366e73e",
+    "src/utils/supabaseClient.js": "9b2247702bcf906c75ebb02f3252a9c05d9e20b7fb7e775cd8fe2dd0b72c9033",
+    "src/utils/useListingRefresh.js": "c45f3265a863ab081c457abfc6d9b3cfcf908c1d1815e059afa6746ba0926bcb",
+    "tests/e2e/account-and-discovery.spec.js": "7e8b22690d1c07b6aebf3bee64663b1584342e527a946097b43062b7b2e0132b",
+    "tests/e2e/evidence-reporter.js": "147b10be65ad6414bc989b4fae17a13f46fc792fb827671204a769139c933eee",
+    "tests/e2e/exchange.live.spec.js": "8534da60ae074662366d55da11558cbb83888c66dfef982a463f3298e1ae028f",
+    "tests/e2e/fixtures/mock-supabase.js": "68bbebb4bf929ade80e302434e7b17720cf3aab50649e88dba2bdc7807547173",
+    "tests/e2e/profile-skills.spec.js": "9c237a21faa8563cf5c8ab665b80e8d2f759dc4764d22befce9a7206eeaaffa7",
+    "tests/e2e/smoke.spec.js": "5aa1e8a0a6bc7b753951deea37ee52de9ddea72f304d6d36e2ee8e9b60125952",
+    "vite.config.js": "e1eefd0ed1639c88d1213884ef760516884db9e168190e223fee6b063ad3e088"
+  },
+  "cases": [
+    {
+      "scenario": "SMOKE: signed-out visitor to /profile reaches login",
+      "project": "smoke",
+      "expected": "signed-out visitor to /profile reaches login",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1195
+    },
+    {
+      "scenario": "SMOKE: signed-out visitor to /skills reaches login",
+      "project": "smoke",
+      "expected": "signed-out visitor to /skills reaches login",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1086
+    },
+    {
+      "scenario": "SMOKE: signed-out visitor to /incoming reaches login",
+      "project": "smoke",
+      "expected": "signed-out visitor to /incoming reaches login",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 986
+    },
+    {
+      "scenario": "SMOKE: signed-out visitor to /confirm reaches login",
+      "project": "smoke",
+      "expected": "signed-out visitor to /confirm reaches login",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 934
+    },
+    {
+      "scenario": "SMOKE: mobile login has labelled fields and fits the viewport",
+      "project": "smoke",
+      "expected": "mobile login has labelled fields and fits the viewport",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1160
+    },
+    {
+      "scenario": "SIGNUP-CONFIRM: registration needs no video and explains email confirmation",
+      "project": "regression",
+      "expected": "registration needs no video and explains email confirmation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1447
+    },
+    {
+      "scenario": "SIGNUP-ERROR: registration needs no video and retains input on Auth failure",
+      "project": "regression",
+      "expected": "registration needs no video and retains input on Auth failure",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1412
+    },
+    {
+      "scenario": "ADMIN-DENY: user metadata cannot bypass a denied administrator RPC",
+      "project": "regression",
+      "expected": "user metadata cannot bypass a denied administrator RPC",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1203
+    },
+    {
+      "scenario": "SEARCH-INTEGRATION: teacher profile links, request selection and empty-tag fallback survive the merged search update",
+      "project": "regression",
+      "expected": "teacher profile links, request selection and empty-tag fallback survive the merged search update",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1361
+    },
+    {
+      "scenario": "PRF-01: profile save persists after reload and navigation",
+      "project": "regression",
+      "expected": "profile save persists after reload and navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2810
+    },
+    {
+      "scenario": "PRF-02: server failure preserves profile edits and permits retry",
+      "project": "regression",
+      "expected": "server failure preserves profile edits and permits retry",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2611
+    },
+    {
+      "scenario": "PRF-03: duplicate username preserves profile edits and permits retry",
+      "project": "regression",
+      "expected": "duplicate username preserves profile edits and permits retry",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2635
+    },
+    {
+      "scenario": "PRF-04: delayed profile save shows busy controls and avoids duplicate submissions",
+      "project": "regression",
+      "expected": "delayed profile save shows busy controls and avoids duplicate submissions",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1423
+    },
+    {
+      "scenario": "PRF-05: invalid Bio blocks the network save",
+      "project": "regression",
+      "expected": "invalid Bio blocks the network save",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1504
+    },
+    {
+      "scenario": "PRF-06: invalid City, state/region blocks the network save",
+      "project": "regression",
+      "expected": "invalid City, state/region blocks the network save",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1413
+    },
+    {
+      "scenario": "PRF-07: another member profile exposes no editor controls (UI boundary only)",
+      "project": "regression",
+      "expected": "another member profile exposes no editor controls (UI boundary only)",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1081
+    },
+    {
+      "scenario": "SKL-01-desktop: create, edit and delete persist across portfolio navigation",
+      "project": "regression",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3650
+    },
+    {
+      "scenario": "SKL-01-mobile: create, edit and delete persist across portfolio navigation",
+      "project": "regression",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3471
+    },
+    {
+      "scenario": "SKL-02-create: failed skill save retains input and retry succeeds",
+      "project": "regression",
+      "expected": "failed skill save retains input and retry succeeds",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2290
+    },
+    {
+      "scenario": "SKL-02-edit: failed skill save retains input and retry succeeds",
+      "project": "regression",
+      "expected": "failed skill save retains input and retry succeeds",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2091
+    },
+    {
+      "scenario": "SKL-03: rejected deletion keeps the skill visible, then retry removes it",
+      "project": "regression",
+      "expected": "rejected deletion keeps the skill visible, then retry removes it",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 2717
+    },
+    {
+      "scenario": "SKL-04: delayed skill creation disables repeat submission and creates one card",
+      "project": "regression",
+      "expected": "delayed skill creation disables repeat submission and creates one card",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1579
+    },
+    {
+      "scenario": "SKL-05: invalid skill Description blocks creation",
+      "project": "regression",
+      "expected": "invalid skill Description blocks creation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1570
+    },
+    {
+      "scenario": "SKL-06: invalid skill City, state/region blocks creation",
+      "project": "regression",
+      "expected": "invalid skill City, state/region blocks creation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 1517
+    }
+  ]
+}

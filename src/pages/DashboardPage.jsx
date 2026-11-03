@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
       try {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('public_profiles')
           .select('display_name, username')
           .eq('id', user.id)
           .maybeSingle()
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         ]
         const { data: teachers } = teacherIds.length
           ? await supabase
-              .from('profiles')
+              .from('public_profiles')
               .select('id, username, display_name')
               .in('id', teacherIds)
           : { data: [] }

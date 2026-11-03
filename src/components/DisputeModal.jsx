@@ -38,21 +38,11 @@ export default function DisputeModal({
 
   if (!isOpen || !exchange) return null;
 
-  // Determine reporter vs reported user
-  const isLearner = currentUser?.id === exchange.learner_id;
-  const reportedUserId = isLearner ? exchange.teacher_id : exchange.learner_id;
-
+  // Display labels only; the RPC derives reporter identity from the session.
   const reporterEmail = currentUser?.email || '';
-  const reporterUsername =
-    currentUser?.user_metadata?.username ||
-    currentUser?.username ||
-    currentUser?.email?.split('@')[0] ||
-    'user';
-
-  const reportedUsername =
-    (isLearner ? exchange.teacher_username : exchange.learner_username) ||
-    (isLearner ? exchange.teacher?.username : exchange.learner?.username) ||
-    (reportedUserId ? `user_${reportedUserId.slice(0, 8)}` : 'exchange_partner');
+  const reporterUsername = currentUser?.user_metadata?.username || 'you';
+  const isLearner = currentUser?.id === exchange.learner_id;
+  const reportedUsername = (isLearner ? exchange.teacher?.username : exchange.learner?.username) || 'exchange partner';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,51 +69,15 @@ export default function DisputeModal({
         )
       }
 
-      const disputePayload = {
-        exchange_id: exchange.id,
-        reporter_id: currentUser?.id,
-        reported_user_id: reportedUserId,
-        reporter_email: reporterEmail,
-        reporter_username: reporterUsername,
-        reported_username: reportedUsername,
-        reason,
-        additional_details: additionalDetails.trim(),
-        status: 'open',
-      };
-
-      // Step 1: Insert into public.disputes
-      const { data: disputeData, error: disputeError } = await supabase
-        .from('disputes')
-        .insert([disputePayload])
-        .select()
-        .single();
-
+      const { data: disputeData, error: disputeError } = await supabase.rpc('submit_skill_dispute', {
+        p_exchange_id: exchange.id,
+        p_reason: reason,
+        p_details: additionalDetails.trim(),
+      });
       if (disputeError) throw disputeError;
 
-      // Step 2: Block ordinary confirmation. Only unsettled participant exchanges.
-      const { data: updatedExchange, error: exchangeError } = await supabase
-        .from('exchanges')
-        .update({
-          status: 'issue_reported',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', exchange.id)
-        .in('status', ['accepted', 'session_completed', 'awaiting_confirmation'])
-        .or(
-          `learner_id.eq.${currentUser?.id},teacher_id.eq.${currentUser?.id}`
-        )
-        .select('id')
-        .maybeSingle();
-
-      if (exchangeError) throw exchangeError
-      if (!updatedExchange) {
-        throw new Error(
-          'This exchange can no longer be disputed. Refresh and try another unsettled lesson.'
-        )
-      }
-
       setSuccessMessage(
-        'Dispute submitted successfully. An administrator will review your report and email you within 24–48 hours once a resolution is reached.'
+        'Dispute submitted. Confirmation is blocked while an administrator reviews the report.'
       );
       
       setTimeout(() => {
@@ -239,7 +193,7 @@ export default function DisputeModal({
               rows={4}
               maxLength={1000}
               className="dispute-textarea"
-              placeholder="Describe what occurred, any missed commitments, or why credits should be withheld or adjusted..."
+              placeholder="Describe what occurred, any missed commitments, or why the exchange should be closed without payment..."
               value={additionalDetails}
               onChange={(e) => setAdditionalDetails(e.target.value)}
               disabled={loading}
@@ -250,8 +204,7 @@ export default function DisputeModal({
           <div className="dispute-notice-box">
             <span className="dispute-notice-icon" aria-hidden="true">✉️</span>
             <p className="dispute-notice-text">
-              An administrator will review your report and email you at{' '}
-              <strong>{reporterEmail || 'your registered email'}</strong> once a resolution has been reached within <strong>24–48 hours</strong>.
+              An administrator can close this exchange without payment. Neither participant receives or loses credits when a dispute is closed.
             </p>
           </div>
 

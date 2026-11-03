@@ -108,15 +108,18 @@ async function withSkillAndLearner(exchanges) {
   ]
   const profileIds = [...new Set([...learnerIds, ...teacherIds])]
 
-  const [{ data: skills }, { data: profiles }] = await Promise.all([
+  const [{ data: skills, error: skillError }, { data: profiles, error: profileError }] = await Promise.all([
     skillIds.length
       ? supabase.from('skills').select('id, title, category, format').in('id', skillIds)
       : Promise.resolve({ data: [] }),
     supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('id, display_name, username')
       .in('id', profileIds),
   ])
+
+  if (skillError) throw skillError
+  if (profileError) throw profileError
 
   const skillsById = Object.fromEntries(
     (skills ?? []).map((skill) => [skill.id, skill])

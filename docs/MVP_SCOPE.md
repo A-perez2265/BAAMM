@@ -1,7 +1,7 @@
 # SkillSwap Minimum Viable Product Specification
 
-**Last Updated:** 2026-10-20<br>
-**Version:** 1.2<br>
+**Last Updated:** 2026-11-03<br>
+**Version:** 1.3<br>
 **Status:** Selected MVP scope baseline. Implementation gaps and release acceptance remain open.
 
 > **Source Baseline:** Requirements are based on `main` at commit `fcf331290ec6c347a244ed2910cabf58081a7512`. Required release behavior is distinguished from existing implementation behavior. Scope decisions were selected on 2026-10-20 and may be revised through change control.
@@ -97,7 +97,7 @@ Teacher and learner roles are determined per exchange. A user may perform both r
 
 A disputed exchange is logically closed without payment when its exchange status is `issue_reported` and its dispute case is `resolved`. This uses existing status values rather than introducing a new exchange enum. Closed disputed exchanges shall remain excluded from active exchanges and ordinary confirmation; their records are retained for audit. Dispute case statuses remain distinct from exchange statuses: `open`, `under_review` and `resolved`. Resolved cases cannot be reopened or settled through the MVP interface.
 
-Direct transition from `pending` or `accepted` to `completed` is prohibited by this specification. The current confirmation SQL accepts `accepted`; that behavior requires correction before release.
+Direct transition from `pending` or `accepted` to `completed` is prohibited by this specification. The current application confirmation SQL rejects `accepted`. The November 3 candidate migration additionally restricts direct status writes and routes both legacy settlement signatures through the guarded confirmation function. Hosted hardening deployment and live acceptance remain pending.
 
 ## 6. Business rules and data constraints
 
@@ -126,7 +126,7 @@ Video verification is not required for the MVP. Registration, learning, teacher 
 
 This decision removes a nonessential dependency from account creation. It does not certify identity or skill quality through another mechanism. Existing stored videos shall not be automatically deleted. Their read access must be restricted to the uploader and authorized administrators through a separately reviewed storage change before release.
 
-**Implementation gap:** Current registration requires a video, uploads it and stores a public URL. The required completion work is to remove the video gate/upload path and related promises from registration, and restrict access to existing videos. No replacement verification feature is required.
+**November 3 local implementation:** Registration no longer requests or uploads videos. The proposed hardening migration restricts existing video reads to the uploader and trusted administrators, disables the known legacy upload policies, and makes the bucket private. Hosted storage was still public during the read-only audit; deployment and HTTP verification remain pending.
 
 **Decision:** Selected for MVP on 2026-10-20. Video functionality may be reconsidered after the MVP.
 
@@ -144,7 +144,7 @@ The administrator reviews the report, records an explanation and resolves the ca
 
 This is cancellation without settlement, not a refund: no credits were charged before the dispute. The MVP does not determine financial fault, force payment, mint compensation credits, reverse completed transfers or support appeals/reopening. A disputed lesson therefore earns no credit, regardless of which participant reported it. That limitation is explicit and may be revised in a later scope version.
 
-**Implementation gap:** The current interface exposes reporting from learner confirmation, offers a separate credit grant and allows case reopening. Complete participant access, atomic case/closure history and terminal-state handling; remove grant/reopen actions from the MVP dispute interface. Existing data and SQL functions are not automatically deleted by this decision.
+**November 3 local implementation:** Both participant screens support reporting. The client uses transactional submission and administrator review RPCs, with a required explanation and terminal no-payment closure. There is no grant/reopen control in the dispute interface. Candidate SQL execution passes locally; hosted deployment and live browser verification remain pending. Existing historical records and unrelated administrative SQL functions are retained.
 
 Resolution follow-up is manual through the existing administrative email link. Automatic email delivery and guaranteed response times are excluded. Interface messages must describe the supported process accurately.
 
@@ -231,3 +231,7 @@ Baseline comparison: progress report dated October 6, 2026, sections “Updated 
 | Testing, security, documentation and CI | Existing work and continued validation planned | Retained and extended through release acceptance; not presented as newly implemented features |
 
 **Revision history:** v1.0 — repository-derived scope. v1.1 — technical requirements format. v1.2 — selected video/dispute policies, preserved reporting by either participant, and recorded milestone scope deferrals.
+
+## Implementation status
+
+The selected scope decisions remain unchanged. Candidate SQL now implements transactional dispute submission and audited closure without payment, public profile projection, and guarded direct exchange transitions. The current execution results and remaining hosted checks are recorded in [test results](testing.md). Earlier implementation-gap paragraphs describe the October baseline; they do not certify the current hosted state.

@@ -4,6 +4,8 @@ A social skill-sharing platform where users learn new skills and teach others us
 
 **Team:** BAAMM &nbsp;|&nbsp; **Institution:** Texas A&M University–San Antonio &nbsp;|&nbsp; **Project Management:** Jira
 
+**MVP specification:** [Functional requirements, business rules and acceptance criteria](docs/MVP_SCOPE.md). The selected baseline defers video verification and uses no-transfer dispute closure; implementation status is documented separately.
+
 ---
 
 ## Table of Contents
@@ -17,7 +19,7 @@ A social skill-sharing platform where users learn new skills and teach others us
 7. [Executing the Test Suite](#7-executing-the-test-suite)
 8. [Project Structure](#8-project-structure)
 9. [Database Schema Overview](#9-database-schema-overview)
-10. [Team Roles & Contributions](#10-team-roles--contributions)
+10. [Contributing](#10-contributing)
 
 ---
 
@@ -90,7 +92,7 @@ SkillSwap is a **React single-page application (SPA)** backed entirely by **Supa
 | `/request` | `RequestExchangePage` | Send a skill exchange request |
 | `/incoming` | `IncomingRequestsPage` | Review requests sent to you |
 | `/confirm` | `ConfirmExchangesPage` | Confirm completed sessions & release credits |
-| `/admin` | `AdminDashboard` | Admin tools (grant credits, manage disputes) |
+| `/admin` | `AdminDashboard` | Trusted administrators review disputes and close without payment |
 | `/forgot-password` | `PasswordRecoveryPage` | Request a password-reset link |
 | `/reset-password` | `PasswordRecoveryPage` | Set a new password via emailed token |
 
@@ -102,7 +104,7 @@ Before cloning, make sure the following are installed on your machine:
 
 | Tool | Minimum Version | Check command |
 |---|---|---|
-| **Node.js** | 18.x or higher | `node --version` |
+| **Node.js** | 22.12+ recommended (Vite requires 20.19+ or 22.12+) | `node --version` |
 | **npm** | 9.x or higher | `npm --version` |
 | **Git** | Any recent version | `git --version` |
 
@@ -114,16 +116,16 @@ You will also need a **Supabase project** (free tier is sufficient). Create one 
 
 ```bash
 # 1. Clone the repo
-git clone <repository-url> BAAMM
+git clone https://github.com/A-perez2265/BAAMM.git BAAMM
 
 # 2. Enter the project directory
 cd BAAMM
 
 # 3. Install all dependencies
-npm install
+npm ci
 ```
 
-> Replace `<repository-url>` with the actual GitHub/GitLab URL of the repository.
+> Use a feature branch for reviewed changes; never commit local credentials.
 
 ---
 
@@ -157,22 +159,28 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
 
 > **Why `VITE_` prefix?** Vite only exposes environment variables to the browser bundle when they are prefixed with `VITE_`. Never put secret keys (service role key) in a `VITE_` variable.
 
-### Step 3 — Apply the database schema (first-time setup only)
+### Step 3 — Configure the database
 
-If you are connecting to a **fresh Supabase project**, run the SQL files in the `supabase/` folder in the order below using the Supabase SQL Editor (Dashboard → SQL Editor):
+**Existing team project:** do not reapply all setup scripts. Review [the proposed Supabase upgrade](docs/database-deployment.md) first. The November 3 frontend requires `public_profiles`, `submit_skill_dispute` and `review_skill_dispute` from `mvp_security_hardening.sql`. Deploy the reviewed SQL before publishing that frontend. The frontend depends on this migration; deployment has not been verified against the hosted environment.
 
-```
+**Fresh Supabase test project:** execute these SQL files in order, using the SQL Editor. `base_schema.sql` defines a reproducible MVP schema; it is not a full export of the hosted project. Run the base script once in an empty project.
+
+```text
+supabase/base_schema.sql
 supabase/exchanges.sql
 supabase/profile_avatars.sql
-supabase/profile_credit_transfers.sql
 supabase/disputes_and_verification.sql
 supabase/dispute_actions.sql
 supabase/confirm_skill_exchange.sql
+supabase/profile_credit_transfers.sql
 supabase/public_text_privacy.sql
 supabase/admin_grant_credits.sql
+supabase/mvp_security_hardening.sql
 ```
 
-Each file is idempotent-safe and sets up the tables, RLS policies, and stored procedures for that feature area.
+Configure Auth → URL Configuration for the app origin and `/reset-password` redirect. Keep email confirmation enabled unless a dedicated test project deliberately uses a different setting. Registration explains confirmation when no session is returned. The MVP has no video upload or approval workflow.
+
+This order is executed by `npm run test:database` in disposable PostgreSQL. That test uses fixture Auth/Storage schemas; actual Supabase Auth, email delivery, API grants, storage delivery and concurrent sessions still require separate environment verification.
 
 ---
 
@@ -198,11 +206,15 @@ npm run preview
 npm run lint
 ```
 
-> The first time you open the app in a fresh browser you will be redirected to the **Login / Sign-up** page. Creating an account through the app's UI is the recommended starting point; Supabase Auth will trigger a database hook that automatically creates your `public.profiles` row and grants **1 starting credit**.
+> The first time you open the app in a fresh browser you will be redirected to the **Login / Sign-up** page. Creating an account through the app's UI is the recommended starting point; Supabase Auth will trigger a database hook that automatically creates your `public.profiles` row and grants **3 starting credits**. No video is required.
 
 ---
 
 ## 7. Executing the Test Suite
+
+For profile/skill privacy controls, dated evidence, and checks that still require a live database or browser, see [Profile and skill security](docs/profile-skill-security.md).
+
+For Playwright regression checks and the opt-in live exchange workflow, see [Browser testing](docs/browser-testing.md). The live workflow requires a dedicated test environment and has not been executed against hosted Supabase.
 
 The project uses Node.js-based integration test scripts that spin up an isolated Vite SSR context and mock the Supabase client. No additional test framework installation is required.
 
@@ -211,7 +223,7 @@ The project uses Node.js-based integration test scripts that spin up an isolated
 npm test
 ```
 
-This runs the following test modules in sequence:
+This runs all five test modules below in sequence:
 
 | File | What it covers |
 |---|---|
@@ -228,16 +240,21 @@ node tests/profile-and-skills.mjs
 node tests/discovery-and-exchanges.mjs
 ```
 
-### Security & auth tests
-
-Two additional test scripts exist for security auditing:
+### Database and browser checks
 
 ```bash
-node tests/test-auth.js
-node tests/test-security-suite.js
+npm run test:database  # Disposable PostgreSQL: SQL, RLS, permissions, state rules and rollback
+npm run test:e2e:install
+npm run test:e2e       # Local browser UI with simulated backend; no live writes
 ```
 
-Generated reports are saved to `tests/results/`.
+See [recorded test results](docs/testing.md) for actual results and limits. `test-results/database-matrix.*` and `test-results/browser-matrix.*` contain execution-specific results; browser screenshots and traces remain local unless reviewed for sharing.
+
+### Live security & auth tests — explicit test environment only
+
+`tests/test-auth.js`, `tests/test-security-suite.js` and the opt-in browser live workflow create records and can transfer credits. Do not run them against the shared team project as a routine check. Use the [live-test prerequisites](docs/browser-testing.md#live-workflow).
+
+GitHub Actions runs lint, all five offline service tests, local database tests, browser regression, dependency scanning and production compilation. A separate manual workflow can run the historical live suites with dedicated `supabase-test` environment secrets. Those historical suites need review against the tightened permissions before being treated as current acceptance evidence.
 
 ---
 
@@ -343,7 +360,8 @@ All tables live in the Supabase `public` schema and are protected by **Row Level
 
 | Table | Purpose |
 |---|---|
-| `profiles` | One row per user; stores display info and `credits_balance` |
+| `profiles` | Private owner row; stores display info and protected `credits_balance` |
+| `public_profiles` (view) | Authenticated safe profile projection; excludes balance, email, video links and admin flag |
 | `skills` | Skill listings (type: `Teacher` or `Learner`) owned by a profile |
 | `exchanges` | Tracks the full lifecycle of a skill exchange (`pending → accepted → session_completed → completed`) |
 | `notifications` | In-app notifications generated by exchange state changes |
@@ -353,16 +371,21 @@ All tables live in the Supabase `public` schema and are protected by **Row Level
 
 - New accounts receive **3 starting credits** via a PostgreSQL trigger (`on_auth_user_created`).
 - Learners must hold **at least 1 credit** to send an exchange request.
-- Credit transfer (learner → teacher) happens atomically inside the `complete_exchange` RPC to prevent race conditions or double-spending.
+- Credit transfer (learner → teacher) happens atomically inside the `confirm_skill_exchange` RPC to prevent race conditions or double-spending.
 
 ---
 
-## 10. Team Roles & Contributions
+## 10. Contributing
 
-| Team Member | Primary Role | Responsibilities |
-|---|---|---|
-| **Augustine Perez** | Team Lead — Requests & Exchanges | Sending requests, accepting/declining, tracking exchange status, marking exchanges complete. Secondary: architecture & planning. |
-| **Ben Fierros** | Skill Discovery & Search | Browsing, search, filtering, and related frontend flow. Secondary: keeps reusable frontend components consistent. |
-| **Amber Parker** | Authentication & Accounts | Login, signup, password/account settings, session flow. Secondary: sets up Jira and keeps the board organized. |
-| **Mario Rodriguez** | Dashboard & Notifications | Main dashboard, activity feed/notifications, navigation flow. Secondary: UI/UX visuals and deployment. |
-| **Mallory Sorola** | Profiles & Skill Management | Profile creation/editing, adding/removing skills, displaying user info. Secondary: front-to-back integration, UX/accessibility. |
+Use a feature branch and submit changes through a pull request. Include relevant tests, document database changes, and keep setup instructions consistent with the implementation. Never commit credentials, generated browser authentication state, or local review material.
+
+Run the checks in [Testing](docs/testing.md) before requesting review. Changes that depend on database views or functions must document their deployment order in [Database deployment](docs/database-deployment.md).
+
+## Technical documentation
+
+- [Architecture and security](docs/architecture-and-security.md)
+- [Database deployment](docs/database-deployment.md)
+- [Testing and recorded results](docs/testing.md)
+- [Browser testing](docs/browser-testing.md)
+- [Profile and skill security](docs/profile-skill-security.md)
+- [MVP requirements and business rules](docs/MVP_SCOPE.md)

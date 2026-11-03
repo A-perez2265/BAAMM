@@ -7,12 +7,18 @@
 #   2. test          → All 5 integration test modules (Vite SSR, no live DB)
 #   3. security-scan → npm audit (dependency CVE check) + secret-leak guard
 #   4. build         → Vite production build (ensures the app compiles cleanly)
-#   5. live-security → Full Supabase security suite (only when secrets exist)
+#   5. live-security → Manual, dedicated test environment only
 # ──────────────────────────────────────────────────────────────────────────────
 
 name: CI
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_live_security:
+        description: Run destructive fixtures only in the dedicated Supabase test environment
+        type: boolean
+        default: false
   push:
     branches: [main]
   pull_request:
@@ -122,12 +128,9 @@ jobs:
         run: npm ci
 
       - name: Dependency audit (npm audit)
-        # Threshold is set to 'critical' because source-map-js (a transitive
-        # dependency of Vite) carries a HIGH advisory (GHSA-68fv-2mgg-jv7q)
-        # that cannot be resolved via `npm audit fix` — it is locked by Vite's
-        # own semver range. The pipeline will still fail on any new CRITICAL CVE.
-        # Track the upstream fix at: https://github.com/advisories/GHSA-68fv-2mgg-jv7q
-        run: npm audit --audit-level=critical
+        # Compatible security updates remove the previously observed high findings.
+        # Moderate lint-toolchain advisories remain documented for review.
+        run: npm audit --audit-level=high
 
       - name: Secret-leak guard (grep source tree)
         # Searches src/ for patterns resembling a Supabase service_role JWT
@@ -150,8 +153,8 @@ jobs:
   build:
     name: Production Build Check
     runs-on: ubuntu-latest
-    # Only block on lint + test passing — security-scan runs in parallel.
-    needs: [lint, test]
+    # Require local regression checks; dependency scanning runs separately.
+    needs: [lint, test, browser, database]
 
     steps:
       - name: Checkout repository
@@ -197,48 +200,71 @@ jobs:
   #   VITE_SUPABASE_URL           (your Supabase project URL)
   #   VITE_SUPABASE_PUBLISHABLE_KEY (your Supabase anon key)
   #   TEST_USER_PASSWORD          (password used by the security test accounts)
-  # ────────────────────────────────────────────────────────────────────────────
+  # Live writes require a manually dispatched, explicitly enabled test job.
   live-security:
-    name: Live Security Suite (optional)
+    name: Live security (manual test environment only)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_live_security
     runs-on: ubuntu-latest
-    # Secrets are available on direct pushes to main and on PRs opened from
-    # within the same repo (not forks). GitHub blocks secret access on fork PRs
-    # by design, so this condition skips the job there automatically.
-    if: >
-      github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name == github.repository
-
+    environment: supabase-test
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 22 LTS
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Supabase security suite
+      - run: npm ci
+      - name: Verify dedicated test configuration
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: node --env-file=<(printenv | grep -E '^(VITE_|TEST_)') tests/test-security-suite.js
-
-      - name: Run auth integration suite
+          TEST_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          TEST_KEY: ${{ secrets.TEST_SUPABASE_PUBLISHABLE_KEY }}
+          TEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          test -n "$TEST_URL" && test -n "$TEST_KEY" && test -n "$TEST_PASSWORD" || { echo "Dedicated test secrets are required"; exit 1; }
+      - name: Run security and auth suites against dedicated test project
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.TEST_SUPABASE_PUBLISHABLE_KEY }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-        run: node --env-file=<(printenv | grep -E '^(VITE_|TEST_)') tests/test-auth.js
+        run: |
+          node tests/test-security-suite.js
+          node tests/test-auth.js
 
-      - name: Upload security report
-        if: always()
-        uses: actions/upload-artifact@v4
+  browser:
+    name: Offline browser regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          name: security-report-${{ github.sha }}
-          path: tests/results/
-          retention-days: 30
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: PLAYWRIGHT_BROWSERS_PATH=.cache/ms-playwright npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-browser-evidence
+          path: |
+            playwright-report/
+            test-results/browser-matrix.*
+            test-results/browser-evidence/
+          retention-days: 7
+
+  database:
+    name: Local database security regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:database
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-database-evidence
+          path: test-results/database-matrix.*
+          retention-days: 7

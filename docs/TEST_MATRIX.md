@@ -1,5 +1,8 @@
 # SkillSwap - Test Matrix
 
+> **Current acceptance evidence:** See [current recorded results](testing.md). The rows below are historical evidence, primarily from October 6, and include code-inspection/inferred results. They must not be presented as a fresh hosted test run.
+
+
 Supplemental local profile and skill regression results are recorded in [Supplemental Profile and Skill Regression Results](profile-skill-regression-results.md). These simulated tests are separate from the historical live security results below.
 
 Real local Supabase API results are recorded in [Profile and Skill Live Integration Results](profile-skill-live-results.md): **14 passed, 1 failed** on 2026-10-20. These checks use a scoped local schema reproduction; they do not rerun or replace the hosted security results below. The failed metadata-based administrator check remains open.
@@ -147,6 +150,8 @@ Real local Supabase API results are recorded in [Profile and Skill Live Integrat
 ---
 
 ## Summary
+
+Additional local browser coverage for Profile and My Skills is documented in [Browser testing](browser-testing.md#profile--my-skills-regression-coverage). Its generated `test-results/browser-matrix.md` records actual results for each execution. These simulated-backend browser cases are separate from the historical counts below and do not certify live database behavior.
 
 | Section | Total Cases | ✅ Pass | ❌ Fail |
 |---|---|---|---|
