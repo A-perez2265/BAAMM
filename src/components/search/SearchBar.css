@@ -61,6 +61,16 @@
   overscroll-behavior: contain;
 }
 
+.search-bar__empty-tags {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  max-height: none;
+  overflow: visible;
+}
+
 .search-bar__suggestion {
   display: flex;
   align-items: center;

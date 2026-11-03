@@ -1,6 +1,21 @@
 import { parseTags } from '../utils/skillUtils'
 import { supabase } from '../utils/supabaseClient'
 
+export function attachTeachersToListings(listings, profiles) {
+  const teachersById = Object.fromEntries(
+    (profiles ?? []).map((profile) => [profile.id, profile])
+  )
+
+  return (listings ?? []).map((skill) => ({
+    ...skill,
+    teacher: teachersById[skill.user_id] ?? null,
+  }))
+}
+
+export function teacherDisplayName(teacher) {
+  return teacher?.display_name || teacher?.username || ''
+}
+
 export async function getDiscoverableSkills(currentUserId) {
   const { data, error } = await supabase
     .from('skills')
@@ -15,7 +30,23 @@ export async function getDiscoverableSkills(currentUserId) {
     throw error
   }
 
-  return data ?? []
+  const listings = data ?? []
+  const teacherIds = [...new Set(listings.map((skill) => skill.user_id).filter(Boolean))]
+
+  if (teacherIds.length === 0) {
+    return listings
+  }
+
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, display_name, username')
+    .in('id', teacherIds)
+
+  if (profileError) {
+    return attachTeachersToListings(listings, [])
+  }
+
+  return attachTeachersToListings(listings, profiles)
 }
 
 export function skillMatchesQuery(skill, query) {
