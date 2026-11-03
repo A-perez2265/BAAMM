@@ -19,7 +19,7 @@ export async function getRequestableSkills(currentUserId) {
   const { data, error } = await supabase
     .from('skills')
     .select(
-      'id, title, description, category, user_id, listing_type, format, language, location, experience_level'
+      'id, title, description, category, user_id, listing_type, tags, format, language, location, experience_level'
     )
     .eq('listing_type', 'Teacher')
     .neq('user_id', currentUserId)
