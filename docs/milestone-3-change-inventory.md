@@ -54,3 +54,19 @@ Date: November 3, 2026. Comparison: `8084334` → `dcc4b8f`. These 50 files cove
 | [tests/local-supabase-workflow.mjs](../tests/local-supabase-workflow.mjs) | Adds actual local API races, last-credit protection, atomic dispute/audit checks and private Storage HTTP authorization. |
 | [tests/profile-and-skills.live.mjs](../tests/profile-and-skills.live.mjs) | Corrects fixtures so protected-ID errors do not mask intended RLS/validation assertions; handles permitted errors and contact-filter-safe synthetic values. |
 | [tests/profile-and-skills.mjs](../tests/profile-and-skills.mjs) | Aligns service mocks with the safe profile read boundary. |
+
+## Submission package additions and follow-up
+
+The following files were added after the 50-file comparison above to prepare the professor's submission materials:
+
+| File | Purpose |
+| --- | --- |
+| [milestone-3-overview.md](milestone-3-overview.md) | Summarizes behavior changes, reasons, test evidence and the professor's requirements for the team. |
+| [milestone-3-change-inventory.md](milestone-3-change-inventory.md) | Provides this file-by-file explanation and identifies the comparison boundary. |
+| [milestone-3-readiness.md](milestone-3-readiness.md) | Maps deliverables and implemented feature areas to evidence and separates team actions from future release coverage. |
+| [milestone-3-retrospective.md](milestone-3-retrospective.md) | Supplies an evidence-based discussion draft without inventing a meeting, agreement, owners or peer scores. |
+| [milestone-3-presentation.md](milestone-3-presentation.md) | Supplies the 35-minute agenda, ten-slide speaking notes and technical Q&A; the editable deck remains a local submission artifact. |
+| [milestone-3-ci-2026-11-03.json](verification/milestone-3-ci-2026-11-03.json) | Records six successful checks and the optional live-job skip for published acceptance commit dcc4b8f. |
+| [browser-navigation-2026-11-03.json](verification/browser-navigation-2026-11-03.json) | Records the later test-readiness correction and six repeated desktop/mobile checks. |
+
+This package also refreshes the README, scope and architecture/security guide to remove superseded deployment statements and clarify remaining release coverage. PR #35 exposed a screenshot race in `tests/e2e/profile-skills.spec.js`: matching the old skill card could succeed before profile navigation finished. Four additional assertions now wait for the profile URL and its Manage skills control before inspecting the edited or deleted portfolio. Six local repetitions passed. Existing assertions and the no-retry policy were retained; no application or shared-database behavior changed.

@@ -55,6 +55,10 @@ The manual two-session shared-backend browser walkthrough also passed all eleven
 
 See [Shared Supabase acceptance](hosted-acceptance.md) for procedures, the expected/actual result matrix and remaining acceptance cases. [Machine-readable evidence](verification/hosted-supabase-2026-11-03.json) records the migration hash and before/after values. Public signup/email, hosted private-video HTTP, hosted concurrency, administrator dispute writes and externally deployed frontend behavior remain outside this run.
 
+## Browser navigation evidence follow-up
+
+During PR #35, one offline browser case failed while capturing an element screenshot after profile navigation. The test could match the skill card on the old page before navigation completed. The corrected checks wait for the profile URL and profile-only Manage skills control before inspecting the portfolio. Six repeated desktop/mobile executions and ESLint passed locally; [the dated record](verification/browser-navigation-2026-11-03.json) identifies the source hash, original CI log and scope. Existing behavior assertions and the no-retry policy remain in place. The completed shared exchange and its balances were not modified by this simulated-backend test correction.
+
 ## Evidence boundaries
 
 Browser checks run real React components with synthetic sessions and intercepted requests. They establish UI behavior and simulated reload persistence, not real login, RLS, database persistence, credit settlement or production accessibility compliance.
