@@ -1,0 +1,195 @@
+{
+  "verified_at": "2026-11-03T19:57:05.717Z",
+  "migration_sha256": "93b0953e27a75e3d8253cdfc0afd697bc0d19f32697f993e78d801eea1331748",
+  "merged_pr": "https://github.com/A-perez2265/BAAMM/pull/34",
+  "commit": "b97170d",
+  "data_unchanged": true,
+  "checks": {
+    "feature_rls": true,
+    "storage_rls": true,
+    "guard_triggers": true,
+    "rpc_permissions": true,
+    "no_anon_profiles": true,
+    "skill_history_fk": true,
+    "rpc_owners_definer": true,
+    "video_bucket_private": true,
+    "no_direct_audit_write": true,
+    "admin_trusted_metadata": true,
+    "exchange_status_update": true,
+    "no_direct_admin_update": true,
+    "private_storage_policy": true,
+    "profile_display_update": true,
+    "no_anon_public_profiles": true,
+    "no_direct_credit_update": true,
+    "safe_profile_projection": true,
+    "no_direct_dispute_insert": true,
+    "no_direct_dispute_update": true,
+    "active_dispute_unique_index": true,
+    "no_exchange_identity_update": true,
+    "authenticated_public_profiles": true,
+    "legacy_storage_writes_removed": true
+  },
+  "data_integrity": {
+    "skills": 120,
+    "disputes": 18,
+    "profiles": 117,
+    "exchanges": 121,
+    "credit_total": 348,
+    "balance_digest": "4b6a57cdf5661d45c8b3db6d312220fa",
+    "dispute_actions": 14
+  },
+  "profile_policies": [
+    {
+      "name": "profiles_own_read",
+      "check": null,
+      "using": "(id = auth.uid())",
+      "command": "SELECT"
+    },
+    {
+      "name": "profiles_own_update",
+      "check": "(id = auth.uid())",
+      "using": "(id = auth.uid())",
+      "command": "UPDATE"
+    }
+  ],
+  "storage_policies": [
+    {
+      "name": "verification_videos_select_policy",
+      "check": null,
+      "using": "((bucket_id = 'verification-videos'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR is_admin()))",
+      "command": "SELECT"
+    },
+    {
+      "name": "verification_videos_private_select",
+      "check": null,
+      "using": "((bucket_id = 'verification-videos'::text) AND (((storage.foldername(name))[1] = (auth.uid())::text) OR is_admin()))",
+      "command": "SELECT"
+    }
+  ],
+  "scope": "Shared Supabase migration, read-only catalog/data-integrity verification and manual two-session browser exchange acceptance; scope limits recorded separately.",
+  "source_commit": "b97170d57a5ba63034211d40cd37a2aa785b6b59",
+  "evidence_query": "tests/hosted-deployment-checks.sql",
+  "browser_walkthrough": {
+    "status": "PASS",
+    "observed_at": "2026-11-03T20:12:46.778Z",
+    "frontend_origin": "http://127.0.0.1:5174",
+    "backend": "shared Supabase",
+    "account_roles": {
+      "teacher": "Existing administrator acting as teacher; no administrator write action performed.",
+      "learner": "Dedicated ordinary account created through Supabase Authentication with auto-confirmation; no administrator privileges."
+    },
+    "test_listing_title": "Acceptance Test Guitar QLNRFA",
+    "teacher_before": {
+      "balance": 1,
+      "earned": 7,
+      "spent": 9
+    },
+    "checks": [
+      {
+        "id": "HOST-01",
+        "status": "PASS",
+        "actual": "Existing administrator account signed in to the shared backend. Dashboard reloaded with balance 1, earned 7 and spent 9; no loading error."
+      },
+      {
+        "id": "HOST-02",
+        "status": "PASS",
+        "actual": "Own profile and four owned skills persisted after reload. Discovery reloaded with 116 teacher listings and public teacher names."
+      },
+      {
+        "id": "HOST-ADMIN",
+        "status": "PASS",
+        "actual": "Existing administrator account passed the server-side administrator gate and loaded dispute records. No dispute action was performed."
+      },
+      {
+        "id": "HOST-04",
+        "status": "PASS",
+        "actual": "Administrator account acting as teacher created a labeled acceptance-test listing through My Skills; listing persisted after reload."
+      },
+      {
+        "id": "HOST-09",
+        "status": "PASS",
+        "actual": "After sign-out, protected /profile visits redirected to /login without profile content; repeated successfully with the ordinary learner after settlement."
+      },
+      {
+        "id": "HOST-03",
+        "status": "PASS",
+        "actual": "Dedicated learner account was redirected from /admin to the ordinary dashboard. Administrator dispute content did not render."
+      },
+      {
+        "id": "HOST-AUTH",
+        "status": "PASS",
+        "actual": "Dedicated account created through Supabase Authentication with email auto-confirmed; real application login succeeded and profile initialized with 3 credits. This does not test public signup or email delivery."
+      },
+      {
+        "id": "HOST-05",
+        "status": "PASS",
+        "actual": "Dedicated learner found the labeled teacher listing and sent one request through the application. Request success message appeared. After dashboard reload, the matching exchange appeared as pending; learner balance remained 3."
+      },
+      {
+        "id": "HOST-06",
+        "status": "PASS",
+        "actual": "Teacher accepted the matching request; accepted state survived reload. Mark as Complete moved the simulated lesson to Waiting on learner; unrelated existing requests were not modified."
+      },
+      {
+        "id": "HOST-07",
+        "status": "PASS",
+        "actual": "Learner clicked Confirm once and received Exchange confirmed. Learner balance changed 3 to 2 and teacher balance changed 1 to 2. After reloading Confirm exchanges, no exchange or confirmation control remained for the settled lesson."
+      },
+      {
+        "id": "HOST-08",
+        "status": "PASS",
+        "actual": "Independent dashboards reloaded with learner balance 2 / spent 1 and teacher balance 2 / earned 8. Teacher spent remained 9 and learner earned remained 0; combined balance remained 4. Read-only Supabase inspection found exactly one matching completed exchange. Reconstructing the pretest balance digest by excluding the new learner and subtracting the single teacher credit matched the pre-upgrade digest."
+      }
+    ],
+    "evidence_retention": "Visually verified learner ledger crop included as sanitized repository evidence. Credentials, authentication state and raw screenshots remain ignored local artifacts.",
+    "learner_before": {
+      "balance": 3,
+      "earned": 0,
+      "spent": 0
+    },
+    "teacher_origin": "http://localhost:5174",
+    "teacher_after": {
+      "balance": 2,
+      "earned": 8,
+      "spent": 9
+    },
+    "learner_after": {
+      "balance": 2,
+      "earned": 0,
+      "spent": 1
+    },
+    "settlement": {
+      "statuses": [
+        "completed"
+      ],
+      "learner_balance": 2,
+      "teacher_balance": 2,
+      "combined_balance": 4,
+      "matching_exchanges": 1,
+      "global_credit_total": 351,
+      "pretest_balance_digest_reconstructed": "4b6a57cdf5661d45c8b3db6d312220fa"
+    },
+    "other_existing_balances_unchanged": true,
+    "limits": [
+      "Teacher used an existing administrator account; this is not a two-ordinary-account run.",
+      "Learner was created using Supabase Authentication auto-confirmation; public signup and email delivery were not tested.",
+      "No real instruction, administrator dispute write, hosted concurrency or hosted private-video HTTP test was performed.",
+      "Frontend served locally against shared Supabase; externally hosted frontend deployment was not verified."
+    ],
+    "retained_fixtures": {
+      "accounts": 1,
+      "teacher_listings": 1,
+      "exchanges": 1,
+      "exchange_status": "completed",
+      "new_account_starting_credits": 3,
+      "credit_transferred": 1
+    },
+    "screenshots": [
+      {
+        "path": "docs/verification/hosted-learner-ledger-2026-11-03.jpg",
+        "sha256": "27e41c09754c6be3bfdc16d3cccafbc255e165183f0d5055c068a75e793cad67",
+        "checkpoint": "Ordinary learner ledger after confirmed settlement and dashboard reload; earned 0, spent 1."
+      }
+    ]
+  }
+}

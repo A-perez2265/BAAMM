@@ -17,6 +17,8 @@ npm audit --audit-level=high
 
 ## Recorded results — November 3, 2026
 
+The table below records the initial implementation verification. Later Docker, CI and shared-database results are recorded in the sections that follow and in [Shared Supabase acceptance](hosted-acceptance.md). Historical NOT RUN entries do not override those later results.
+
 The source baseline is `8084334` with uncommitted implementation changes. Machine-readable verification records include the tested input hashes; the baseline commit alone does not identify those changes.
 
 | Check | Expected result | Actual result | Status | Evidence |
@@ -44,6 +46,14 @@ After synchronization to merged `main` at `7e994b9`, the local Supabase upgrade 
 | Real two-user browser workflow | Listing → discovery → request → acceptance → completion → confirmation → refreshed balances/ledger passed | [Local verification record](verification/local-supabase-2026-11-03.json) |
 
 See [Local Supabase testing](local-supabase-testing.md) for reproducible commands, fixture retention and verification limits. These local results do not change the NOT RUN status of hosted acceptance above.
+
+## Shared Supabase deployment verification
+
+PR #34 merged after six automated CI checks passed; its optional manual live job was skipped. The shared migration completed on November 3, 2026, and all 23 read-only configuration checks passed. Aggregate record counts and the digest of every profile's credit balance matched the pre-upgrade snapshot. The video bucket is private.
+
+The manual two-session shared-backend browser walkthrough also passed all eleven recorded checkpoints. An administrator acted as teacher and a dedicated ordinary learner was denied administrator access. Listing creation, discovery, request, acceptance, simulated completion, learner confirmation, dashboard reloads and sign-out protection succeeded. SQL confirmed one completed exchange, exact one-credit settlement and unchanged balances for other existing profiles.
+
+See [Shared Supabase acceptance](hosted-acceptance.md) for procedures, the expected/actual result matrix and remaining acceptance cases. [Machine-readable evidence](verification/hosted-supabase-2026-11-03.json) records the migration hash and before/after values. Public signup/email, hosted private-video HTTP, hosted concurrency, administrator dispute writes and externally deployed frontend behavior remain outside this run.
 
 ## Evidence boundaries
 

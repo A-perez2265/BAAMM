@@ -64,7 +64,9 @@ Inspect existing views, function ownership/execution grants, role memberships an
 6. Verify old public video URLs are denied, authorized private reads succeed and unrelated reads are denied over HTTP.
 7. Record migration hashes, environment, expected/actual results and sanitized evidence.
 
-The migration has been executed in disposable PostgreSQL tests and applied to Docker-backed local Supabase. [Real local API/browser checks](verification/local-supabase-2026-11-03.json) passed, including concurrent settlements and Storage HTTP access. Hosted application, storage HTTP, email and concurrent-session acceptance have not been completed in the recorded November 3 results. Read-only inspection found trusted admin/signup definitions and the confirmation RPC installed, while the retained-video bucket was public. These observations describe configuration rather than hosted runtime certification.
+The migration passed disposable PostgreSQL and Docker-backed local Supabase tests. [Real local API/browser checks](verification/local-supabase-2026-11-03.json) passed, including concurrent settlements and Storage HTTP access.
+
+On November 3, 2026, the reviewed migration was applied to the shared Supabase database. All 23 post-deployment catalog checks passed; record counts and individual credit balances were unchanged. The retained-video bucket is now private. A subsequent manual browser walkthrough against the shared backend completed the exchange flow and verified persisted one-credit settlement. See [Shared Supabase acceptance](hosted-acceptance.md) for procedures, actual results, fixture retention and scope limits. Hosted Storage HTTP, email, concurrent-session behavior and administrator dispute writes still require separate acceptance.
 
 ## Recovery
 
