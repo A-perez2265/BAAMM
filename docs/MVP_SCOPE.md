@@ -2,9 +2,11 @@
 
 **Last Updated:** 2026-11-03<br>
 **Version:** 1.3<br>
-**Status:** Selected MVP scope baseline. Implementation gaps and release acceptance remain open.
+**Status:** Selected MVP scope baseline. Shared hardening deployment and core exchange acceptance completed; remaining release checks are recorded separately.
 
 > **Source Baseline:** Requirements are based on `main` at commit `fcf331290ec6c347a244ed2910cabf58081a7512`. Required release behavior is distinguished from existing implementation behavior. Scope decisions were selected on 2026-10-20 and may be revised through change control.
+
+> **Implementation update:** November 3 implementation and evidence through `dcc4b8f` are summarized in [Milestone 3 readiness](milestone-3-readiness.md). The original requirements baseline above is retained for traceability; the deployment statements below reflect the later verified state.
 
 ---
 
@@ -97,7 +99,7 @@ Teacher and learner roles are determined per exchange. A user may perform both r
 
 A disputed exchange is logically closed without payment when its exchange status is `issue_reported` and its dispute case is `resolved`. This uses existing status values rather than introducing a new exchange enum. Closed disputed exchanges shall remain excluded from active exchanges and ordinary confirmation; their records are retained for audit. Dispute case statuses remain distinct from exchange statuses: `open`, `under_review` and `resolved`. Resolved cases cannot be reopened or settled through the MVP interface.
 
-Direct transition from `pending` or `accepted` to `completed` is prohibited by this specification. The current application confirmation SQL rejects `accepted`. The November 3 candidate migration additionally restricts direct status writes and routes both legacy settlement signatures through the guarded confirmation function. Hosted hardening deployment and live acceptance remain pending.
+Direct transition from `pending` or `accepted` to `completed` is prohibited. The deployed November 3 hardening migration restricts direct status writes and routes both legacy settlement signatures through the guarded confirmation function. The shared browser walkthrough followed teacher completion and learner confirmation successfully; local tests cover invalid transitions and replay.
 
 ## 6. Business rules and data constraints
 
@@ -126,7 +128,7 @@ Video verification is not required for the MVP. Registration, learning, teacher 
 
 This decision removes a nonessential dependency from account creation. It does not certify identity or skill quality through another mechanism. Existing stored videos shall not be automatically deleted. Their read access must be restricted to the uploader and authorized administrators through a separately reviewed storage change before release.
 
-**November 3 local implementation:** Registration no longer requests or uploads videos. The proposed hardening migration restricts existing video reads to the uploader and trusted administrators, disables the known legacy upload policies, and makes the bucket private. Hosted storage was still public during the read-only audit; deployment and HTTP verification remain pending.
+**November 3 implementation:** Registration no longer requests or uploads videos. The deployed hardening migration restricts retained-video reads to the uploader and trusted administrators, removes known legacy upload policies and makes the bucket private. Shared catalog verification passed. Actual private Storage HTTP tests passed locally; hosted HTTP acceptance remains open.
 
 **Decision:** Selected for MVP on 2026-10-20. Video functionality may be reconsidered after the MVP.
 
@@ -144,7 +146,7 @@ The administrator reviews the report, records an explanation and resolves the ca
 
 This is cancellation without settlement, not a refund: no credits were charged before the dispute. The MVP does not determine financial fault, force payment, mint compensation credits, reverse completed transfers or support appeals/reopening. A disputed lesson therefore earns no credit, regardless of which participant reported it. That limitation is explicit and may be revised in a later scope version.
 
-**November 3 local implementation:** Both participant screens support reporting. The client uses transactional submission and administrator review RPCs, with a required explanation and terminal no-payment closure. There is no grant/reopen control in the dispute interface. Candidate SQL execution passes locally; hosted deployment and live browser verification remain pending. Existing historical records and unrelated administrative SQL functions are retained.
+**November 3 implementation:** Both participant screens support reporting. The client uses deployed transactional submission and administrator review RPCs, with a required explanation and terminal no-payment closure. There is no grant/reopen control in the dispute interface. Local SQL/API cases, including failure rollback, passed. Shared function/permission checks and administrator page access passed; hosted administrator writes remain unexecuted. Existing historical records and unrelated administrative SQL functions are retained.
 
 Resolution follow-up is manual through the existing administrative email link. Automatic email delivery and guaranteed response times are excluded. Interface messages must describe the supported process accurately.
 
@@ -172,16 +174,16 @@ No numerical performance target or claim of accessibility compliance is establis
 
 | Subsystem | Existing implementation | Required release work |
 | --- | --- | --- |
-| Accounts | Registration, authentication, sessions and recovery | Verify real recovery/redirect behavior and remove the verification-video dependency |
-| Profiles and skills | Profile editing, public profiles, preset avatars and listing CRUD | Verify backend privacy/ownership and safe deletion with dependent exchanges |
-| Discovery | Database listings, text search, tag suggestions and facet filters | Preserve filter composition, listing freshness and request-link correctness |
-| Exchanges and credits | Request/response pages, teacher completion, learner confirmation and transactional settlement SQL | Enforce actor/state rules and verify replay, concurrency and insufficient-credit behavior |
-| Dashboard | Balance, pending/active exchanges, activity and aggregate credit summaries | Verify consistency after operations and exclude resolved disputed exchanges from active counts |
-| Administration | Dispute records, status changes, action history and credit grants | Remove editable-metadata trust; support reporting by either participant and audited no-transfer closure without grant/reopen controls |
-| Storage | Video upload and public-read storage configuration | Disable MVP verification uploads and restrict retained-video access without deleting existing files |
-| Repository and CI | README, test matrix, service/security tests and workflow configuration | Supply missing base database definitions/policies, correct setup dependencies, reconcile credit documentation and verify workflow execution |
+| Accounts | No-video registration, authentication, sessions and recovery | Complete shared public signup/email and recovery/redirect acceptance |
+| Profiles and skills | Safe public view, owned edits, preset avatars, listing CRUD and history guard | Preserve passing local ownership/privacy tests and shared persistence evidence |
+| Discovery | Database listings, text search, tag suggestions, combined filters and listing-specific request links | Preserve regression and shared listing discovery behavior |
+| Exchanges and credits | Guarded actor/state rules, teacher completion and fixed one-credit settlement | Preserve local replay/concurrency/funds tests and shared successful settlement; hosted races remain separate |
+| Dashboard | Persisted balances, pending/active exchanges, activity and earned/spent summaries | Preserve shared after-reload consistency; local dispute closure checks remain the evidence for disputed activity behavior |
+| Administration | Trusted administrator gate and atomic explained/audited no-payment closure | Complete hosted administrator-write acceptance; retained legacy credit-grant SQL is outside the MVP interface |
+| Storage | New video upload deferred; retained bucket private with uploader/admin reads | Complete shared HTTP authorization checks; actual local Storage HTTP cases passed |
+| Repository and CI | Reproducible base/upgrade SQL, current setup docs, result matrices and automated quality checks | Reconcile all-member contribution evidence and verify final submission CI; full hosted restore drill remains open |
 
-The implementation baseline above was established by reviewing application routes, service modules, SQL definitions, tests, CI configuration and repository documentation at the source commit identified in this specification. The listed release work remains necessary before acceptance. Local uncommitted browser tests are supplementary artifacts and are not part of the reviewed `main` baseline.
+The updated implementation table reflects reviewed code and the dated [local/shared verification records](testing.md). Required release work is listed by environment; a local pass is not automatically a hosted pass. The [milestone checklist](milestone-3-readiness.md) separates prepared materials from actions that require the team.
 
 ## 10. Excluded functionality
 
