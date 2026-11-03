@@ -1,0 +1,58 @@
+{
+  "startedAt": "2026-11-03T20:52:17.739Z",
+  "finishedAt": "2026-11-03T20:52:45.732Z",
+  "status": "passed",
+  "baseCommit": "c4649994ff34150e6f726cdf23fae8fa2ccfb496",
+  "uncommittedChanges": true,
+  "scope": "Browser UI checks. Regression project uses synthetic sessions and simulated Supabase; no real backend verification.",
+  "trigger": "PR #35 initially failed during locator screenshot capture because the profile-navigation test could match the old page before the new profile view was ready.",
+  "original_ci_log": "https://github.com/A-perez2265/BAAMM/actions/runs/41716032883/job/126196136196?pr=35",
+  "correction": "Wait for the /profile URL and the profile-only Manage skills link before checking the edited/deleted skill portfolio. No application logic, timeout, assertion removal or retry policy changed.",
+  "command": "npm run test:e2e:profiles -- --grep 'SKL-01-' --repeat-each=3",
+  "source_sha256": "a1c27d1c3ec29d44a49c9730d035e90af9c51614e09f74a09f3c13a0b313d5c9",
+  "lint": "PASS",
+  "results": [
+    {
+      "scenario": "SKL-01-desktop: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 4595
+    },
+    {
+      "scenario": "SKL-01-mobile: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3647
+    },
+    {
+      "scenario": "SKL-01-desktop: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3828
+    },
+    {
+      "scenario": "SKL-01-mobile: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3531
+    },
+    {
+      "scenario": "SKL-01-desktop: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3989
+    },
+    {
+      "scenario": "SKL-01-mobile: create, edit and delete persist across portfolio navigation",
+      "expected": "create, edit and delete persist across portfolio navigation",
+      "actual": "All assertions passed",
+      "status": "passed",
+      "durationMs": 3554
+    }
+  ]
+}

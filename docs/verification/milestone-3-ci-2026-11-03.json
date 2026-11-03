@@ -1,0 +1,52 @@
+{
+  "source_commit": "dcc4b8f",
+  "observed_at": "2026-11-03T20:42:23.735833+00:00",
+  "source": "GitHub check-runs API",
+  "successful_jobs": 6,
+  "skipped_jobs": 1,
+  "checks": [
+    {
+      "name": "Production Build Check",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126183761756"
+    },
+    {
+      "name": "Live security (manual test environment only)",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182919115"
+    },
+    {
+      "name": "Integration Tests",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182916988"
+    },
+    {
+      "name": "Local database security regression",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182916756"
+    },
+    {
+      "name": "Security Scan",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182916699"
+    },
+    {
+      "name": "Offline browser regression",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182916687"
+    },
+    {
+      "name": "Lint (ESLint)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/A-perez2265/BAAMM/actions/runs/41712221989/job/126182916454"
+    }
+  ],
+  "scope": "CI for the published acceptance commit; the optional manual live-security job was skipped. This is not a live shared-security test."
+}

@@ -16,7 +16,7 @@ The [selected MVP](MVP_SCOPE.md) includes account access/recovery, profiles, own
 | Services | `src/services/` | Supabase queries and guarded database RPC calls |
 | Identity | Supabase Auth | Registration, email/password login, sessions and recovery |
 | Database | Supabase PostgreSQL | Persistent records, constraints, grants, RLS, state rules and atomic transactions |
-| Retained media | Supabase Storage | Existing videos; candidate policy makes bucket private and limits reads |
+| Retained media | Supabase Storage | Existing videos retained in a private bucket with uploader/administrator reads |
 | Quality checks | ESLint, Node assertions, Playwright, disposable PostgreSQL, GitHub Actions | Local behavior and database regression evidence; production compilation |
 
 The frontend uses only the public project URL and public API key. Backend service-role credentials never belong in browser environment variables. Database functions, rather than the browser, enforce authorization and settlement.
@@ -34,22 +34,22 @@ The frontend uses only the public project URL and public API key. Backend servic
 5. The designated learner confirms. A guarded database transaction locks the exchange and both profiles, checks funds, subtracts one credit, adds one credit and marks the exchange `completed`.
 6. Reloaded dashboards derive balances and earned/spent counts from persisted data.
 
-Either participant can report an accepted, unsettled exchange. Candidate SQL locks the exchange, creates one report and sets `issue_reported` in the same transaction. An administrator supplies an explanation to review or resolve it. Resolution records the audit action transactionally without changing either balance; resolved cases cannot reopen through the MVP.
+Either participant can report an accepted, unsettled exchange. The guarded SQL function locks the exchange, creates one report and sets `issue_reported` in the same transaction. An administrator supplies an explanation to review or resolve it. Resolution records the audit action transactionally without changing either balance; resolved cases cannot reopen through the MVP.
 
 ## Security features
 
-| Control | Candidate implementation | Evidence / limit |
+| Control | Implemented protection | Evidence / limit |
 | --- | --- | --- |
-| Trusted admin authority | `is_admin()` reads only `app_metadata.is_admin`; signup ignores editable admin metadata | Local SQL and browser denial tests; hosted function source inspected, no fresh hosted exploit test |
-| Private profile data | Owner-only profile RLS; public projection excludes balance/admin/video/email | Local SQL queries under separate role claims; hosted view is not yet deployed |
-| Restricted writes | Column grants plus owned-profile/skill RLS; clients cannot insert profiles or edit balances/admin authority | Local PostgreSQL permission tests |
+| Trusted admin authority | `is_admin()` reads only `app_metadata.is_admin`; signup ignores editable admin metadata | Local API metadata-escalation denial passed; shared administrator access and ordinary-learner denial passed |
+| Private profile data | Owner-only profile RLS; public projection excludes balance/admin/video/email | Local SQL/API isolation tests passed; shared view/grants verified and public display reads succeeded |
+| Restricted writes | Column grants plus owned-profile/skill RLS; clients cannot insert profiles or edit balances/admin authority | Local PostgreSQL/API tests and shared catalog assertions passed |
 | Request integrity | DB validates learner, funds, teacher listing and pending initial state | Local request and invalid-listing tests |
-| State authorization | Only designated teacher accepts/declines/marks complete; settlement/dispute states require guarded definer functions | Local direct-API-equivalent SQL tests; hosted application still pending |
-| Credit integrity | Exchange row lock; deterministic participant lock order; fixed one-credit transfer; replay/state/funds checks | Sequential replay/transfer tested; separate-session races not yet tested |
+| State authorization | Only designated teacher accepts/declines/marks complete; settlement/dispute states require guarded definer functions | Local SQL/API tests passed; shared request-to-confirmation browser flow succeeded |
+| Credit integrity | Exchange row lock; deterministic participant lock order; fixed one-credit transfer; replay/state/funds checks | Actual local API races passed; shared single settlement and balance conservation verified. Hosted concurrency not run |
 | Dispute integrity | Transactional submission and audited resolution; required explanation; direct table mutations denied | Injected update/audit failures prove local rollback |
 | History preservation | Skill FK and deletion guard preserve existing exchange references | Local deletion rejection test |
 | Public text privacy | Client validation and database trigger reject recognizable contact details | Existing service cases plus direct SQL bypass attempt; pattern detection is best effort |
-| Retained videos | Candidate bucket private; uploader/admin SELECT only; known legacy upload/public-read policies removed | Local policy tests; real storage HTTP behavior remains unverified |
+| Retained videos | Bucket private; uploader/admin SELECT only; known legacy upload/public-read policies removed | Actual local Storage HTTP authorization passed; shared private bucket/policies verified. Hosted Storage HTTP not run |
 | Error handling | Auth failure retains form input; no status-only settlement fallback; RPC failures are surfaced | Simulated service/browser tests |
 
 Security-definer functions are owned by `postgres`, have an explicit search path and enforce session identity before effects. Ordinary users cannot choose administrator authority at signup. Existing administrative accounts must use trusted app metadata and refresh their sessions after a trusted role change.
@@ -64,6 +64,19 @@ Keep environment files, local CLI state, browser auth state and raw traces out o
 
 ## Deployment and remaining limitations
 
-The local frontend depends on the new public-profile view and dispute RPCs. Review/apply the candidate migration before publishing this frontend. Existing user sessions may need refresh after trusted metadata changes. Private storage breaks old public video URLs by design without deleting stored media.
+The frontend depends on the public-profile view and dispute RPCs. The reviewed upgrade was applied to shared Supabase on November 3, 2026; all 23 catalog checks and eleven subsequent browser checkpoints passed. The shared walkthrough used an existing administrator as teacher and a dedicated ordinary learner. Existing sessions may need refresh after trusted metadata changes. Private storage restricts old public video delivery without deleting stored media.
 
-A hosted schema/configuration export and restore drill are still required to establish full reproducibility of the shared environment. The fresh-project schema is an MVP baseline, not an assertion of exact hosted parity. Automated local checks do not certify email delivery, password-reset redirect configuration, storage HTTP access, real login, simultaneous transactions, production deployment or all accessibility requirements. See [current evidence](testing.md) for the exact acceptance boundary.
+A local export of the affected hosted definitions was captured before migration; it is not a full database backup. A verified hosted restore drill remains necessary to establish recovery capability. The fresh-project schema is an MVP baseline, not an assertion of exact hosted parity. Public signup/email delivery, recovery redirects, hosted private-video HTTP, hosted concurrency, administrator dispute writes, external frontend deployment and full accessibility compliance remain outside shared acceptance. See [current evidence](testing.md) and [shared acceptance](hosted-acceptance.md).
+
+## Risks and residual work
+
+| Risk | Implemented safeguard | Remaining limitation / test |
+| --- | --- | --- |
+| A caller forges another user's identifiers or bypasses the interface | Owner/participant RLS, restricted grants, server-derived identity and state guards | Keep direct API regression; a hidden button alone is never authorization evidence |
+| An ordinary user promotes themselves to administrator | Trusted app metadata, non-admin signup and server-side RPC authorization | Trusted administrator provisioning remains an operational responsibility; refresh sessions after role changes |
+| Repeated or competing confirmations spend the same credit | Exchange/profile locks, deterministic lock order, settlement-time funds check and transaction rollback | Separate-session local tests passed; repeat in an approved hosted acceptance environment before claiming hosted concurrency |
+| A report blocks the wrong exchange or closure loses its audit history | Guarded atomic submit/review functions, required explanation and active-dispute uniqueness | Local rollback tests passed; shared administrator-write acceptance remains open |
+| Private videos are accessed through an old public URL | Private bucket and uploader/administrator read policies | Shared configuration passed; shared HTTP denial and authorized delivery still need verification |
+| Public text contains contact details | Client validation and database privacy triggers | Pattern matching is best effort and does not establish comprehensive data-loss prevention |
+| Secrets or personal test data enter GitHub | Public-key-only frontend configuration, ignore rules, synthetic fixtures and reviewed sanitized evidence | Review staged content and raw artifacts before each publication; ignore rules do not remove already-tracked files |
+| Environment drift breaks setup or recovery | Versioned SQL, separate fresh/upgrade procedures, input hashes and deployment records | A full hosted backup/restore drill and another developer's setup review remain outstanding |
