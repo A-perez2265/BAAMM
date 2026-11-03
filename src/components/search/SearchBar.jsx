@@ -15,7 +15,7 @@ function HighlightedTagName({ name, query }) {
   );
 }
 
-function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
+function SearchBar({ query, onQueryChange, suggestionTags = [], showEmptyTagsHint = false }) {
   const [isFocused, setIsFocused] = useState(false);
   const [menuDismissed, setMenuDismissed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -26,15 +26,23 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
   const prefixMatches = getPrefixMatchedTags(suggestionTags, query);
   const showSuggestedTags =
     isFocused && !menuDismissed && trimmedQuery === '' && suggestionTags.length > 0;
+  const showEmptyTagsMessage =
+    isFocused &&
+    !menuDismissed &&
+    trimmedQuery === '' &&
+    showEmptyTagsHint &&
+    suggestionTags.length === 0;
   const showAutocomplete =
     isFocused && !menuDismissed && trimmedQuery.length >= 3 && prefixMatches.length > 0;
-  const showDropdown = showSuggestedTags || showAutocomplete;
+  const showDropdown = showSuggestedTags || showAutocomplete || showEmptyTagsMessage;
   const visibleTags = showSuggestedTags ? suggestionTags : showAutocomplete ? prefixMatches : [];
   const menuKey = showSuggestedTags
     ? `suggested:${suggestionTags.map((tag) => tag.id).join('|')}`
     : showAutocomplete
       ? `auto:${trimmedQuery}:${prefixMatches.map((tag) => tag.id).join('|')}`
-      : 'closed';
+      : showEmptyTagsMessage
+        ? 'empty-tags'
+        : 'closed';
 
   if (highlightMenuKey !== menuKey) {
     setHighlightMenuKey(menuKey);
@@ -151,6 +159,15 @@ function SearchBar({ query, onQueryChange, suggestionTags = [] }) {
             </button>
           )}
         </div>
+        {showEmptyTagsMessage && (
+          <p
+            id="search-suggested-tags"
+            className="search-bar__suggestions search-bar__empty-tags"
+            role="status"
+          >
+            No tags on these listings yet. Type a title or keyword to search.
+          </p>
+        )}
         {showSuggestedTags && (
           <ul
             id="search-suggested-tags"

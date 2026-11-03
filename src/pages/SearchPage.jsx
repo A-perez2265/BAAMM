@@ -8,7 +8,9 @@ import {
   getListingSuggestionTags,
   skillMatchesFilters,
   skillMatchesQuery,
+  teacherDisplayName,
 } from '../services/discoveryService'
+import { parseTags } from '../utils/skillUtils'
 import { supabase } from '../utils/supabaseClient'
 import { useListingRefresh } from '../utils/useListingRefresh'
 import './SearchPage.css'
@@ -87,59 +89,122 @@ function SearchPage() {
   const showNoListings = !loading && !error && listings.length === 0
 
   return (
-    <main className="search-page">
-      <h1>Search</h1>
-      <p>
-        Browse teacher listings. Type at least three letters for matching tags,
-        or choose a popular tag and filters, then select Request Exchange.
-      </p>
+    <main id="main-content" className="community-page search-page" tabIndex={-1}>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Discover</p>
+          <h1>
+            Search <span className="count">{results.length}</span>
+          </h1>
+          <p>
+            Browse teacher listings. Type at least three letters for matching
+            tags, or choose a popular tag and filters, then select Request
+            Exchange.
+          </p>
+        </div>
+      </div>
 
-      <SearchBar
-        query={query}
-        onQueryChange={setQuery}
-        suggestionTags={suggestionTags}
-      />
-      <SearchFilters
-        filters={filters}
-        onFilterChange={updateFilter}
-        onReset={resetFilters}
-      />
+      <section className="panel search-page__controls" aria-label="Search and filters">
+        <SearchBar
+          query={query}
+          onQueryChange={setQuery}
+          suggestionTags={suggestionTags}
+          showEmptyTagsHint={!loading && listings.length > 0 && suggestionTags.length === 0}
+        />
+        <SearchFilters
+          filters={filters}
+          onFilterChange={updateFilter}
+          onReset={resetFilters}
+        />
+      </section>
 
-      {loading && <p>Loading listings…</p>}
-      {error && <p className="search-page__error">{error}</p>}
+      {loading && (
+        <p role="status" className="panel">
+          Loading listings…
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="notice error">
+          {error}
+        </p>
+      )}
       {showNoListings && (
-        <p>No teacher listings from other users are available yet.</p>
+        <div className="panel empty-state">
+          <span className="empty-icon" aria-hidden="true">
+            ✦
+          </span>
+          <h3>No teacher listings yet</h3>
+          <p>No teacher listings from other users are available yet.</p>
+        </div>
       )}
 
       {showEmptyResults && (
-        <div className="search-page__empty">
-          <p>No Results found.</p>
-          <button type="button" onClick={clearSearch}>
+        <div className="panel empty-state">
+          <h3>No Results found.</h3>
+          <p>Try another tag or reset the filters to see more listings.</p>
+          <button type="button" className="primary-button" onClick={clearSearch}>
             Clear search
           </button>
         </div>
       )}
 
       {results.length > 0 && (
-        <ul className="search-page__results">
-          {results.map((skill) => (
-            <li key={skill.id} className="search-page__card">
-              <h2>{skill.title}</h2>
-              <p>{skill.description}</p>
-              <p>
-                {skill.category}
-                {skill.experience_level ? ` · ${skill.experience_level}` : ''}
-                {skill.format ? ` · ${skill.format}` : ''}
-              </p>
-              {skill.location && <p>{skill.location}</p>}
-              <Link
-                className="search-page__request"
-                to={`/request?skill=${encodeURIComponent(skill.id)}`}
-              >
-                Request Exchange
-              </Link>
-            </li>
-          ))}
+        <ul className="skills-grid search-page__results">
+          {results.map((skill) => {
+            const tags = parseTags(skill.tags)
+            const teacherName = teacherDisplayName(skill.teacher)
+            return (
+              <li key={skill.id}>
+                <article className="skill-card">
+                  <div className="card-labels">
+                    {skill.category && <span className="badge">{skill.category}</span>}
+                    <span className="listing-label listing-teaching">Teacher</span>
+                  </div>
+                  <h3>{skill.title}</h3>
+                  {teacherName && skill.user_id && (
+                    <p className="search-page__teacher">
+                      <Link className="text-link" to={`/profile/${skill.user_id}`}>
+                        {teacherName}
+                      </Link>
+                    </p>
+                  )}
+                  <p className="skill-description">{skill.description}</p>
+                  <dl className="skill-details">
+                    {[
+                      ['Experience', skill.experience_level],
+                      ['Format', skill.format],
+                      ['Language', skill.language],
+                      ['Location', skill.location],
+                    ]
+                      .filter(([, value]) => value)
+                      .map(([label, value]) => (
+                        <div key={label}>
+                          <div>
+                            <dt>{label}</dt>
+                            <dd>{value}</dd>
+                          </div>
+                        </div>
+                      ))}
+                  </dl>
+                  {tags.length > 0 && (
+                    <ul className="skill-tags" aria-label="Skill tags">
+                      {tags.map((tag) => (
+                        <li key={tag}>#{tag}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="card-actions">
+                    <Link
+                      className="button-link primary-button"
+                      to={`/request?skill=${encodeURIComponent(skill.id)}`}
+                    >
+                      Request Exchange
+                    </Link>
+                  </div>
+                </article>
+              </li>
+            )
+          })}
         </ul>
       )}
     </main>
