@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../utils/supabaseClient'
 import { useListingRefresh } from '../utils/useListingRefresh'
+import { parseTags } from '../utils/skillUtils'
 import {
   createExchangeRequest,
   getCreditsBalance,
@@ -124,74 +125,146 @@ function RequestExchangePage() {
   }
 
   return (
-    <main className="request-exchange">
-      <h1>Teacher listings</h1>
-      <p>Credits: {credits === null ? '…' : credits}</p>
-      <p>Scroll posted teacher skills and request the one you want to learn.</p>
-      <button type="button" onClick={refreshListings} disabled={loadingListings || loading}>
-        Refresh listings
-      </button>
-      {loadingListings && <p>Loading listings…</p>}
+    <main id="main-content" className="community-page request-exchange" tabIndex={-1}>
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Request</p>
+          <h1>
+            Teacher listings <span className="count">{skills.length}</span>
+          </h1>
+          <p>
+            Scroll posted teacher skills and request the one you want to learn.
+          </p>
+        </div>
+        <div className="request-exchange__heading-tools">
+          <p className="request-exchange__credits">
+            Credits
+            <strong>{credits === null ? '…' : credits}</strong>
+          </p>
+          <button
+            type="button"
+            onClick={refreshListings}
+            disabled={loadingListings || loading}
+          >
+            Refresh listings
+          </button>
+        </div>
+      </div>
 
-      {error && <p className="request-exchange-error">{error}</p>}
-      {success && <p className="request-exchange-success">{success}</p>}
-
-      {!loadingListings && !error && skills.length === 0 && (
-        <p>No teacher listings from other users are available yet.</p>
+      {loadingListings && (
+        <p role="status" className="panel">
+          Loading listings…
+        </p>
       )}
 
-      <ul className="request-exchange-feed">
-        {skills.map((skill) => (
-          <li id={`skill-${skill.id}`} key={skill.id} className="request-exchange-card">
-            <h2>{skill.title}</h2>
-            <p>{skill.description}</p>
-            <p>
-              {skill.category}
-              {skill.experience_level ? ` · ${skill.experience_level}` : ''}
-              {skill.format ? ` · ${skill.format}` : ''}
-            </p>
-            {skill.location && <p>{skill.location}</p>}
+      {error && (
+        <p role="alert" className="notice error">
+          {error}
+        </p>
+      )}
+      {success && (
+        <p role="status" className="notice success">
+          {success}
+        </p>
+      )}
 
-            {openSkillId === skill.id ? (
-              <div className="request-exchange-compose">
-                <label>
-                  Message
-                  <textarea
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    placeholder="Say what you want to learn and when you are free"
-                    required
-                  />
-                </label>
-                <div className="request-exchange-actions">
-                  <button
-                    type="button"
-                    onClick={() => handleRequest(skill)}
-                    disabled={loading || loadingListings || credits === null || credits < 1}
-                  >
-                    {loading ? 'Sending…' : 'Send request'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOpenSkillId(null)}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => openRequestForm(skill.id)}
-                disabled={loading || loadingListings || credits === null || credits < 1}
-              >
-                Request Exchange
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {!loadingListings && !error && skills.length === 0 && (
+        <div className="panel empty-state">
+          <span className="empty-icon" aria-hidden="true">
+            ✦
+          </span>
+          <h3>No teacher listings yet</h3>
+          <p>No teacher listings from other users are available yet.</p>
+        </div>
+      )}
+
+      {skills.length > 0 && (
+        <ul className="skills-grid request-exchange__results">
+          {skills.map((skill) => {
+            const tags = parseTags(skill.tags)
+            const isOpen = openSkillId === skill.id
+
+            return (
+              <li id={`skill-${skill.id}`} key={skill.id}>
+                <article className={`skill-card${isOpen ? ' request-exchange__card--open' : ''}`}>
+                  <div className="card-labels">
+                    {skill.category && <span className="badge">{skill.category}</span>}
+                    <span className="listing-label listing-teaching">Teacher</span>
+                  </div>
+                  <h3>{skill.title}</h3>
+                  <p className="skill-description">{skill.description}</p>
+                  <dl className="skill-details">
+                    {[
+                      ['Experience', skill.experience_level],
+                      ['Format', skill.format],
+                      ['Language', skill.language],
+                      ['Location', skill.location],
+                    ]
+                      .filter(([, value]) => value)
+                      .map(([label, value]) => (
+                        <div key={label}>
+                          <div>
+                            <dt>{label}</dt>
+                            <dd>{value}</dd>
+                          </div>
+                        </div>
+                      ))}
+                  </dl>
+                  {tags.length > 0 && (
+                    <ul className="skill-tags" aria-label="Skill tags">
+                      {tags.map((tag) => (
+                        <li key={tag}>#{tag}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="card-actions">
+                    {isOpen ? (
+                      <div className="request-exchange__compose">
+                        <label htmlFor={`message-${skill.id}`}>
+                          Message
+                          <textarea
+                            id={`message-${skill.id}`}
+                            value={message}
+                            onChange={(event) => setMessage(event.target.value)}
+                            placeholder="Say what you want to learn and when you are free"
+                            required
+                          />
+                        </label>
+                        <div className="request-exchange__actions">
+                          <button
+                            type="button"
+                            className="primary-button"
+                            onClick={() => handleRequest(skill)}
+                            disabled={loading || loadingListings || credits === null || credits < 1}
+                          >
+                            {loading ? 'Sending…' : 'Send request'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setOpenSkillId(null)}
+                            disabled={loading}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={() => openRequestForm(skill.id)}
+                        disabled={loading || loadingListings || credits === null || credits < 1}
+                      >
+                        Request Exchange
+                      </button>
+                    )}
+                  </div>
+                </article>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </main>
   )
 }

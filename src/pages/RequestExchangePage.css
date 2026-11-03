@@ -1,83 +1,97 @@
 .request-exchange {
   text-align: left;
-  padding: 24px 20px 48px;
-  max-width: 720px;
-  margin: 0 auto;
 }
 
-.request-exchange-feed {
-  list-style: none;
-  padding: 0;
-  margin: 24px 0 0;
+.request-exchange__heading-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.request-exchange__credits {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.request-exchange-card {
+  gap: 2px;
+  min-width: 88px;
+  padding: 10px 16px;
+  background: white;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  background: var(--bg);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
-.request-exchange-card h2 {
-  margin: 0 0 8px;
+.request-exchange__credits strong {
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  line-height: 1.1;
+  text-transform: none;
 }
 
-.request-exchange-card p {
-  margin: 0 0 8px;
+.request-exchange__results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.request-exchange-compose {
+.request-exchange__results > li {
+  min-width: 0;
+  display: flex;
+}
+
+.request-exchange__results .skill-card {
+  width: 100%;
+}
+
+.request-exchange__card--open {
+  border-color: #b6929e;
+}
+
+.request-exchange__compose {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  width: 100%;
 }
 
-.request-exchange-compose label {
+.request-exchange__compose label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 0.9rem;
   color: var(--text-h);
 }
 
-.request-exchange-compose textarea {
-  font: inherit;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
+.request-exchange__compose textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 11px 12px;
+  border: 1px solid #9d9397;
+  border-radius: 8px;
+  background: #fff;
   color: var(--text-h);
-  min-height: 88px;
-  resize: vertical;
 }
 
-.request-exchange-actions {
+.request-exchange__actions {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.request-exchange button {
-  align-self: flex-start;
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 2px solid transparent;
-  background: var(--accent-bg);
-  color: var(--accent);
-  cursor: pointer;
-}
+@media (max-width: 640px) {
+  .request-exchange__heading-tools {
+    width: 100%;
+  }
 
-.request-exchange button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.request-exchange-error {
-  color: #ef4444;
-}
-
-.request-exchange-success {
-  color: #16a34a;
+  .request-exchange__heading-tools > button {
+    flex: 1;
+  }
 }
