@@ -161,7 +161,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
 
 ### Step 3 — Configure the database
 
-**Existing team project:** do not reapply all setup scripts. Review [the proposed Supabase upgrade](docs/database-deployment.md) first. The November 3 frontend requires `public_profiles`, `submit_skill_dispute` and `review_skill_dispute` from `mvp_security_hardening.sql`. Deploy the reviewed SQL before publishing that frontend. The frontend depends on this migration; deployment has not been verified against the hosted environment.
+**Existing team project:** do not reapply all setup scripts. Review [the proposed Supabase upgrade](docs/database-deployment.md) first. The November 3 frontend requires `public_profiles`, `submit_skill_dispute` and `review_skill_dispute` from `mvp_security_hardening.sql`. Deploy the reviewed SQL before publishing that frontend. The migration has been deployed to the hosted Supabase environment and all post-deployment acceptance checks passed on November 3, 2026. See [Shared Supabase acceptance](docs/hosted-acceptance.md) for the full verification record.
 
 **Fresh Supabase test project:** execute these SQL files in order, using the SQL Editor. `base_schema.sql` defines a reproducible MVP schema; it is not a full export of the hosted project. Run the base script once in an empty project.
 
