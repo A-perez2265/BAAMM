@@ -22,6 +22,7 @@ export async function getRequestableSkills(currentUserId) {
       'id, title, description, category, user_id, listing_type, tags, format, language, location, experience_level'
     )
     .eq('listing_type', 'Teacher')
+    .is('archived_at', null)
     .neq('user_id', currentUserId)
     .order('title', { ascending: true })
 
@@ -64,6 +65,7 @@ export async function createExchangeRequest({
     .eq('id', skillId)
     .eq('user_id', teacherId)
     .eq('listing_type', 'Teacher')
+    .is('archived_at', null)
     .maybeSingle()
 
   if (listingError) throw listingError

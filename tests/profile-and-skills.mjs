@@ -8,7 +8,10 @@ const query = new Proxy({}, { get(_target, method) {
   if (method === 'then') return (resolve) => resolve(queuedResponses.length ? queuedResponses.shift() : response)
   return (...args) => { calls.push([method, ...args]); return query }
 } })
-globalThis.__profileTestClient = { from(table) { calls.push(['from', table]); return query } }
+globalThis.__profileTestClient = {
+  from(table) { calls.push(['from', table]); return query },
+  rpc(name, args) { calls.push(['rpc', name, args]); return query },
+}
 const server = await createServer({
   configFile: false,
   server: { middlewareMode: true, hmr: false, ws: false },
@@ -114,13 +117,16 @@ try {
   response = { data: [], error: null }
   await getSkills('owner')
   assert.deepEqual(calls.find(([method]) => method === 'eq'), ['eq', 'user_id', 'owner'])
+  assert.deepEqual(calls.find(([method]) => method === 'is'), ['is', 'archived_at', null])
   calls = []
   await assert.rejects(deleteSkill('owner', 'other-skill'), /not removed/)
-  assert.deepEqual(calls.filter(([method]) => method === 'eq'), [['eq', 'id', 'other-skill'], ['eq', 'user_id', 'owner']])
+  assert.deepEqual(calls, [['rpc', 'remove_skill', { p_skill_id: 'other-skill' }]])
   response = { data: null, error: { code: '42501', message: 'Permission denied' } }
   await assert.rejects(deleteSkill('owner', 'skill'), error => error.code === '42501')
-  response = { data: [{ id: 'skill' }], error: null }
-  await deleteSkill('owner', 'skill')
+  for (const action of ['deleted', 'archived']) {
+    response = { data: { id: 'skill', action }, error: null }
+    assert.deepEqual(await deleteSkill('owner', 'skill'), { id: 'skill', action })
+  }
   console.log('Passed: profile normalization/validation, public field selection, database saves/errors, skill validation, ownership filters, and zero-row delete handling.')
 
   // Supplemental regression cases use only the injected client above, never a live database.

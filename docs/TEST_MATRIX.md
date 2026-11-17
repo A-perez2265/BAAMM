@@ -5,7 +5,7 @@
 
 Supplemental local profile and skill regression results are recorded in [Supplemental Profile and Skill Regression Results](profile-skill-regression-results.md). These simulated tests are separate from the historical live security results below.
 
-Real local Supabase API results are recorded in [Profile and Skill Live Integration Results](profile-skill-live-results.md): **14 passed, 1 failed** on 2026-10-20. These checks use a scoped local schema reproduction; they do not rerun or replace the hosted security results below. The failed metadata-based administrator check remains open.
+Real local Supabase API results are recorded in [Profile and Skill Live Integration Results](profile-skill-live-results.md): **14 passed, 1 failed** on 2026-10-20. These checks use a scoped local schema reproduction; they do not rerun or replace the hosted security results below. That historical run found a metadata-based administrator defect. The defect was subsequently fixed; the [November 3 local verification](verification/local-supabase-2026-11-03.json) records 15/15 passing profile/skill API cases, including denial of editable-metadata administrator escalation.
 
 **Last Updated:** 2026-10-14  
 **Security Suite Run:** 2026-10-06 at 18:09 UTC  
