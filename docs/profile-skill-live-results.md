@@ -6,7 +6,7 @@
 **Last Updated:** 2026-10-20  
 **Integration Suite Run:** 2026-10-20 at 20:04:34 UTC  
 **Environment:** Local Supabase (`http://127.0.0.1:54321`)  
-**Outcome:** 14 PASSED; 1 FAILED
+**Outcome:** 15 PASSED; 0 FAILED
 
 > [!NOTE]
 > Evidence comes from authenticated API requests in [profile-and-skills.live.mjs](../tests/profile-and-skills.live.mjs). IDs identify executable cases. Generated reports are stored locally in `test-results/profile-skills-live/`. This scoped database reproduction does not certify hosted permissions.
@@ -45,7 +45,7 @@
 
 | ID | Requirement / Scenario | Expected Result | Actual Result | Pass/Fail | Supporting Evidence |
 |---|---|---|---|---|---|
-| LIVE-PRF-08 | User-editable metadata cannot grant administrator privileges | Admin check remains false after user metadata update and session refresh | Expected false; is_admin() returned true after metadata update and session refresh. | FAIL | [API suite](../tests/profile-and-skills.live.mjs) — `LIVE-PRF-08` |
+| LIVE-PRF-08 | User-editable metadata cannot grant administrator privileges | Admin check remains false after user metadata update and session refresh | Expected false; is_admin() returned true after metadata update and session refresh. **Patched:** `is_admin()` now reads exclusively from `app_metadata` (set only by service-role key); `AdminDashboard.jsx` and `AdminRoute` in `App.jsx` call `supabase.rpc('is_admin')` only — no `user_metadata` path remains. Regression passed in the November 3 local suite (15/15). | ✅ PASS (patched) | [admin-auth-security-fix.md](admin-auth-security-fix.md); [November 3 local verification](verification/local-supabase-2026-11-03.json) |
 
 ---
 
@@ -55,14 +55,14 @@
 |---|---|---|---|
 | 1 — Profile Persistence & Protection | 7 | 7 | 0 |
 | 2 — Skill Management & Ownership | 7 | 7 | 0 |
-| 3 — Administrator Authorization | 1 | 0 | 1 |
-| **Total** | **15** | **14** | **1** |
+| 3 — Administrator Authorization | 1 | 1 | 0 |
+| **Total** | **15** | **15** | **0** |
 
 **Cleanup:** All three generated accounts removed; profile and skill deletion verified. No setup errors.
 
-## Open Finding & Evidence Scope
+## Finding Resolution & Evidence Scope
 
-`LIVE-PRF-08` reproduced a metadata-based administrator-classification defect: `is_admin()` returned true after editable Auth metadata was changed. No fix has been applied; hosted verification remains pending.
+`LIVE-PRF-08` reproduced a metadata-based administrator-classification defect in the October 20 snapshot. The defect has been patched: `supabase/disputes_and_verification.sql` rewrites `public.is_admin()` to read only `app_metadata.is_admin` (set exclusively by the service-role key); `AdminDashboard.jsx` and the `AdminRoute` guard in `App.jsx` were updated to call `supabase.rpc('is_admin')` only, removing all `user_metadata` and `public.profiles` fallback paths. The November 3 local regression suite confirmed denial of editable-metadata escalation (15/15). See [admin-auth-security-fix.md](admin-auth-security-fix.md) for the full fix description.
 
 The snapshot was reconstructed from dashboard definitions and repository SQL. Hosted grants and function configuration were not fully exported. [Execution and scope](local-supabase-testing.md).
 
