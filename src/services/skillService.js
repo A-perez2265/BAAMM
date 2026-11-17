@@ -2,12 +2,13 @@ import { assertPublicFields } from '../utils/publicTextPrivacy'
 import { supabase } from '../utils/supabaseClient'
 import { parseTags } from '../utils/skillUtils'
 
-// Retrieves all skills belonging to a specific user
+// Retrieves active skills belonging to a specific user
 export async function getSkills(userId) {
   const { data, error } = await supabase
     .from('skills')
     .select('id, user_id, title, description, category, listing_type, tags, experience_level, format, language, location, created_at')
     .eq('user_id', userId)
+    .is('archived_at', null)
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -72,17 +73,14 @@ export async function updateSkill(userId, skillId, skill) {
   return data
 }
 
-// Deletes an existing skill belonging to a specific user
+// The server deletes unused skills and archives skills with exchange history.
 export async function deleteSkill(userId, skillId) {
-  const { data, error } = await supabase
-    .from('skills')
-    .delete()
-    .eq('id', skillId)
-    .eq('user_id', userId)
-    .select('id')
+  if (!userId || !skillId) throw new Error('Sign in and select a skill to remove.')
+  const { data, error } = await supabase.rpc('remove_skill', { p_skill_id: skillId })
 
   if (error) {
     throw error
   }
-  if (!data?.length) throw new Error('Skill was not removed. Check ownership and permissions.')
+  if (!['deleted', 'archived'].includes(data?.action)) throw new Error('Skill was not removed. Check ownership and permissions.')
+  return data
 }

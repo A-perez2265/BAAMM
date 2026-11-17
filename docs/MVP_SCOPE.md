@@ -58,7 +58,7 @@ Teacher and learner roles are determined per exchange. A user may perform both r
 - **FR-07:** Users shall be able to create, edit and remove their own Teacher or Learner skill listings.
 - **FR-08:** Skill listings shall support a title, description, category, tags, experience level, delivery format, language and optional broad location.
 - **FR-09:** Profile and skill changes shall persist and appear consistently after navigation or reload.
-- **FR-10:** Listing removal shall preserve exchange and credit-history integrity. Removal shall be rejected with an explanatory error if dependent records prevent safe deletion.
+- **FR-10:** Listing removal shall preserve exchange and credit-history integrity. Skills without exchange references shall be deleted; skills with exchange references shall be archived and hidden from active portfolios, discovery and new requests. Existing exchanges shall retain their skill details and normal lifecycle. See [the skill-removal migration](skill-archiving.md); this update requires deployment before use.
 
 ### 4.3 Skill discovery
 

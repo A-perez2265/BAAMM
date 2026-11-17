@@ -45,6 +45,7 @@ try {
   assert.deepEqual(await discovery.getDiscoverableSkills('learner'), [skill])
   assert.ok(calls.some(([method, column, value]) => method === 'eq' && column === 'listing_type' && value === 'Teacher'))
   assert.ok(calls.some(([method, column, value]) => method === 'neq' && column === 'user_id' && value === 'learner'))
+  assert.ok(calls.some(([method, column, value]) => method === 'is' && column === 'archived_at' && value === null))
   // Teacher-name hydration must use the safe view, including with owner-only profile RLS.
   calls = []
   const teacher = { id: 'teacher', display_name: 'Art Teacher', username: 'art.teacher' }
@@ -78,6 +79,7 @@ try {
     learner_id: 'learner', teacher_id: 'teacher', skill_id: 'guitar', message: 'Teach me chords', status: 'pending',
   })
   assert.equal(calls.filter(([method]) => method === 'insert').length, 1)
+  assert.ok(calls.some(([method, column, value]) => method === 'is' && column === 'archived_at' && value === null))
   assert.deepEqual(calls.filter(([method]) => method === 'eq'), [
     ['eq', 'id', 'learner'], ['eq', 'id', 'guitar'],
     ['eq', 'user_id', 'teacher'], ['eq', 'listing_type', 'Teacher'],

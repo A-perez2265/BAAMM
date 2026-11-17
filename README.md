@@ -161,7 +161,9 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key-here
 
 ### Step 3 — Configure the database
 
-**Existing team project:** do not reapply all setup scripts. Review [the proposed Supabase upgrade](docs/database-deployment.md) first. The November 3 frontend requires `public_profiles`, `submit_skill_dispute` and `review_skill_dispute` from `mvp_security_hardening.sql`. Deploy the reviewed SQL before publishing that frontend. The migration has been deployed to the hosted Supabase environment and all post-deployment acceptance checks passed on November 3, 2026. See [Shared Supabase acceptance](docs/hosted-acceptance.md) for the full verification record.
+**Existing team project:** do not reapply all setup scripts. Review [the Supabase deployment guide](docs/database-deployment.md) first. The November 3 frontend requires `public_profiles`, `submit_skill_dispute` and `review_skill_dispute` from `mvp_security_hardening.sql`. Deploy the reviewed SQL before publishing that frontend. The migration was deployed to the shared Supabase environment on November 3, 2026. All 23 configuration checks and eleven recorded browser checkpoints passed. The verification record identifies the scenarios covered and the remaining acceptance cases. See [Shared Supabase acceptance](docs/hosted-acceptance.md) for the full verification record.
+
+**Skill removal update:** Apply [skill_archiving.sql](supabase/skill_archiving.sql) after the hardening migration and before using the updated frontend. See [deployment instructions](docs/skill-archiving.md).
 
 **Fresh Supabase test project:** execute these SQL files in order, using the SQL Editor. `base_schema.sql` defines a reproducible MVP schema; it is not a full export of the hosted project. Run the base script once in an empty project.
 
@@ -176,6 +178,7 @@ supabase/profile_credit_transfers.sql
 supabase/public_text_privacy.sql
 supabase/admin_grant_credits.sql
 supabase/mvp_security_hardening.sql
+supabase/skill_archiving.sql
 ```
 
 Configure Auth → URL Configuration for the app origin and `/reset-password` redirect. Keep email confirmation enabled unless a dedicated test project deliberately uses a different setting. Registration explains confirmation when no session is returned. The MVP has no video upload or approval workflow.

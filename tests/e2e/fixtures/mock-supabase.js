@@ -64,7 +64,7 @@ export const test = base.extend({
       if (url.pathname === '/rest/v1/exchanges' && request.method() === 'GET') return send([])
       const table = url.pathname.replace('/rest/v1/', '')
       const method = request.method()
-      if (!url.pathname.startsWith('/rest/v1/') || !['profiles', 'public_profiles', 'skills'].includes(table) ||
+      if (!url.pathname.startsWith('/rest/v1/') || !['profiles', 'public_profiles', 'skills', 'rpc/remove_skill'].includes(table) ||
           !['GET', 'POST', 'PATCH', 'DELETE'].includes(method) || (table === 'profiles' && !['GET', 'PATCH'].includes(method)) || (table === 'public_profiles' && method !== 'GET')) {
         unexpected.push(`${method} ${url.pathname}`)
         return send({ message: 'Unimplemented mock request' }, 501)
@@ -78,10 +78,19 @@ export const test = base.extend({
         if (rule.gate) await rule.gate
         if (rule.error) return send({ code: rule.error.code, message: rule.error.message }, rule.error.status)
       }
+      if (table === 'rpc/remove_skill') {
+        const skill = skills.find(row => row.id === payload.p_skill_id && row.user_id === OWNER_ID)
+        if (!skill) return send({ code: '42501', message: 'Skill not found or not owned by you' }, 403)
+        const action = skill.hasExchangeHistory || skill.archived_at ? 'archived' : 'deleted'
+        if (action === 'archived') skill.archived_at ||= new Date().toISOString()
+        else skills = skills.filter(row => row.id !== skill.id)
+        return send({ id: skill.id, action })
+      }
       let rows = table === 'skills' ? skills : profiles
       // Honor equality filters instead of returning success for any requested ID.
       const matches = row => [...url.searchParams].every(([key, value]) => {
         if (value.startsWith('eq.')) return String(row[key]) === value.slice(3)
+        if (value === 'is.null') return row[key] == null
         if (value.startsWith('neq.')) return String(row[key]) !== value.slice(4)
         return true
       })

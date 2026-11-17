@@ -23,6 +23,7 @@ export async function getDiscoverableSkills(currentUserId) {
       'id, title, description, category, user_id, listing_type, tags, experience_level, format, language, location'
     )
     .eq('listing_type', 'Teacher')
+    .is('archived_at', null)
     .neq('user_id', currentUserId)
     .order('title', { ascending: true })
 

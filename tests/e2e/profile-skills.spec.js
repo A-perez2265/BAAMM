@@ -137,9 +137,10 @@ test.describe('Profile and skill browser regression — SIMULATED backend', () =
       await expect(page.getByRole('link', { name: 'Manage skills', exact: true })).toBeVisible()
       await expect(skillCard(page, 'Guitar Basics')).toBeVisible()
       await expect(skillCard(page, 'Piano Practice')).toHaveCount(0)
-      expect(mockBackend.writes.map(write => write.method)).toEqual(['POST', 'PATCH', 'DELETE'])
+      expect(mockBackend.writes.map(write => write.method)).toEqual(['POST', 'PATCH', 'POST'])
       expect(mockBackend.writes[1].filters.user_id).toBe(`eq.${OWNER_ID}`)
-      expect(mockBackend.writes[2].filters.user_id).toBe(`eq.${OWNER_ID}`)
+      expect(mockBackend.writes[2].table).toBe('rpc/remove_skill')
+      expect(mockBackend.writes[2].payload.p_skill_id).toBeTruthy()
     })
   }
 
@@ -164,8 +165,34 @@ test.describe('Profile and skill browser regression — SIMULATED backend', () =
     })
   }
 
+  test('SKL-ARCHIVE: used skill disappears from active portfolio and discovery after removal', async ({ page, mockBackend }) => {
+    mockBackend.addListing({ id: '20000000-0000-4000-8000-000000000099', user_id: OWNER_ID,
+      title: 'Previously Taught Piano', description: 'Practice piano.', listing_type: 'Teacher',
+      category: 'Music', tags: ['piano'], hasExchangeHistory: true })
+    await page.goto('/skills')
+    await page.getByRole('button', { name: 'Remove Previously Taught Piano', exact: true }).click()
+    await expect(page.getByText('Existing exchanges and history will be preserved.')).toBeVisible()
+    await page.getByRole('button', { name: 'Yes, remove', exact: true }).click()
+    await expect(page.getByRole('status').filter({ hasText: 'removed from active listings' })).toBeVisible()
+    await page.reload()
+    await expect(skillCard(page, 'Previously Taught Piano')).toHaveCount(0)
+    await page.goto('/profile')
+    await expect(skillCard(page, 'Previously Taught Piano')).toHaveCount(0)
+    mockBackend.addListing({ id: '20000000-0000-4000-8000-000000000098', user_id: OTHER_ID,
+      title: 'Archived Watercolor', description: 'Practice painting.', listing_type: 'Teacher',
+      category: 'Art', archived_at: '2026-11-17T00:00:00Z' })
+    mockBackend.addListing({ id: '20000000-0000-4000-8000-000000000097', user_id: OTHER_ID,
+      title: 'Active Watercolor', description: 'Practice painting.', listing_type: 'Teacher', category: 'Art' })
+    await page.goto('/search')
+    await expect(page.getByRole('heading', { name: 'Active Watercolor', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Archived Watercolor', exact: true })).toHaveCount(0)
+    await page.goto('/request')
+    await expect(page.getByRole('heading', { name: 'Active Watercolor', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Archived Watercolor', exact: true })).toHaveCount(0)
+  })
+
   test('SKL-03: rejected deletion keeps the skill visible, then retry removes it', async ({ page, mockBackend }, testInfo) => {
-    mockBackend.failNext('skills', 'DELETE', { code: '42501', message: 'Permission denied', status: 403 })
+    mockBackend.failNext('rpc/remove_skill', 'POST', { code: '42501', message: 'Permission denied', status: 403 })
     await page.goto('/skills')
     await page.getByRole('button', { name: 'Remove Guitar Basics', exact: true }).click()
     await page.getByRole('button', { name: 'Yes, remove', exact: true }).click()
@@ -178,7 +205,7 @@ test.describe('Profile and skill browser regression — SIMULATED backend', () =
     await page.reload()
     await expect(page.getByRole('heading', { name: 'You know something worth sharing', exact: true })).toBeVisible()
     await expect(skillCard(page, 'Guitar Basics')).toHaveCount(0)
-    expect(writesFor(mockBackend, 'skills', 'DELETE')).toHaveLength(2)
+    expect(writesFor(mockBackend, 'rpc/remove_skill', 'POST')).toHaveLength(2)
   })
 
   test('SKL-04: delayed skill creation disables repeat submission and creates one card', async ({ page, mockBackend }) => {

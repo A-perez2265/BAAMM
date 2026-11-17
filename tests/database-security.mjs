@@ -11,7 +11,7 @@ const startedAt = new Date().toISOString()
 const cases = []
 const migrations = ['base_schema.sql', 'exchanges.sql', 'profile_avatars.sql',
   'disputes_and_verification.sql', 'dispute_actions.sql', 'confirm_skill_exchange.sql',
-  'profile_credit_transfers.sql', 'public_text_privacy.sql', 'admin_grant_credits.sql', 'mvp_security_hardening.sql']
+  'profile_credit_transfers.sql', 'public_text_privacy.sql', 'admin_grant_credits.sql', 'mvp_security_hardening.sql', 'skill_archiving.sql']
 const hashes = {}
 const learner = '10000000-0000-4000-8000-000000000001'
 const teacher = '10000000-0000-4000-8000-000000000002'
@@ -73,7 +73,7 @@ try {
       hashes[file] = createHash('sha256').update(sql).digest('hex')
       try { await db.exec(sql) } catch (error) { throw new Error(`${file}: ${error.message}`, { cause: error }) }
     }
-    return 'All 10 SQL files executed successfully'
+    return `All ${migrations.length} SQL files executed successfully`
   })
   await db.query("insert into auth.users(id,email,raw_user_meta_data) values($1,'learner@example.test','{\"username\":\"learner\",\"is_admin\":true}'),($2,'teacher@example.test','{\"username\":\"teacher\"}'),($3,'other@example.test','{\"username\":\"other\"}')", [learner, teacher, outsider])
   await db.query("insert into public.skills(id,user_id,listing_type,title,description,category,experience_level,format,language) values($1,$2,'Teacher','Guitar Basics','Learn beginner chords.','Music','Beginner','Online','English')", [skill, teacher])
@@ -168,6 +168,33 @@ try {
     assert.deepEqual(await balances(), before)
     assert.equal((await db.query('select count(*)::int as count from public.dispute_actions where dispute_id=$1', [disputeId])).rows[0].count, 2)
     await rejectUser(outsider, "update public.disputes set status='open' where id=$1", [disputeId], /permission/, true)
+  })
+  await check('DB-ARCHIVE', 'Only the owner removes skills; history archives, unused skills delete, and existing exchanges finish', async () => {
+    const before = await balances()
+    const pending = await makeExchange()
+    await rejectUser(learner, 'select public.remove_skill($1)', [skill], /not owned/)
+    await rejectUser(teacher, 'update public.skills set archived_at=now() where id=$1', [skill])
+    const removed = (await asUser(teacher, 'select public.remove_skill($1) as result', [skill]))[0].result
+    assert.equal(removed.action, 'archived')
+    assert.ok((await db.query('select archived_at from public.skills where id=$1', [skill])).rows[0].archived_at)
+    const archivedAt = (await db.query('select archived_at from public.skills where id=$1', [skill])).rows[0].archived_at
+    assert.equal((await asUser(teacher, 'select public.remove_skill($1) as result', [skill]))[0].result.action, 'archived')
+    assert.deepEqual((await db.query('select archived_at from public.skills where id=$1', [skill])).rows[0].archived_at, archivedAt)
+    assert.equal((await asUser(learner, 'select id from public.skills where archived_at is null and id=$1', [skill])).length, 0)
+    await assert.rejects(makeExchange(), /no longer available/i)
+    assert.equal((await asUser(learner, 'select title from public.skills where id=$1', [skill]))[0].title, 'Guitar Basics')
+    assert.equal((await asUser(learner, 'select status from public.exchanges where id=$1', [paid]))[0].status, 'completed')
+    assert.deepEqual(await balances(), before)
+    await asUser(teacher, "update public.exchanges set status='accepted' where id=$1", [pending])
+    await asUser(teacher, "update public.exchanges set status='session_completed' where id=$1", [pending])
+    assert.equal((await asUser(learner, 'select public.confirm_skill_exchange($1) as result', [pending]))[0].result.transferred_credits, 1)
+    const unused = (await asUser(teacher, "insert into public.skills(user_id,listing_type,title,description,category,experience_level,format,language) values($1,'Teacher','Unused Piano','Practice piano.','Music','Beginner','Online','English') returning id", [teacher]))[0].id
+    assert.equal((await asUser(teacher, 'select public.remove_skill($1) as result', [unused]))[0].result.action, 'deleted')
+    assert.equal((await db.query('select id from public.skills where id=$1', [unused])).rows.length, 0)
+    await rejectUser(teacher, 'select public.remove_skill($1)', [unused], /not found/)
+    await db.exec('begin; set local role anon;')
+    await assert.rejects(db.query('select public.remove_skill($1)', [skill]), /permission/)
+    await db.exec('rollback;')
   })
   await check('DB-VIDEO', 'Bucket private; uploader/admin reads allowed; other users and anonymous RPC denied', async () => {
     assert.equal((await db.query("select public from storage.buckets where id='verification-videos'")).rows[0].public, false)

@@ -82,12 +82,14 @@ export default function SkillManagementPage() {
     setError('')
     setMessage('')
     try {
-      await deleteSkill(userId, skill.id)
+      const result = await deleteSkill(userId, skill.id)
       setSkills(current => current.filter(item => item.id !== skill.id))
       setRemoving(null)
-      setMessage(`${skill.title} removed from your portfolio.`)
+      setMessage(result.action === 'archived'
+        ? `${skill.title} removed from active listings. Existing exchanges and history are preserved.`
+        : `${skill.title} removed from your portfolio.`)
       requestAnimationFrame(() => addButton.current?.focus())
-    } catch { showError('Unable to remove this skill. Please try again.') }
+    } catch { showError('Unable to remove this skill. Refresh the page and try again. If this continues, contact the team.') }
     finally { setBusy(false) }
   }
 
@@ -102,7 +104,7 @@ export default function SkillManagementPage() {
           <p className="sr-only" role="status">{skills.filter(skill => roleFilter === 'All' || skill.listingType === roleFilter).length} skills shown.</p>
           {skills.length > 0 && !skills.some(skill => roleFilter === 'All' || skill.listingType === roleFilter) && <div className="panel empty-state"><h3>No {roleFilter.toLowerCase()} listings yet</h3><p>Add a skill or select All to see your other listings.</p><button onClick={() => setRoleFilter('All')}>Show all skills</button></div>}
           {skills.length ? <div className="skills-grid">{skills.filter(skill => roleFilter === 'All' || skill.listingType === roleFilter).map(skill => <SkillCard key={skill.id} skill={skill}>
-            {removing === skill.id ? <div className="remove-confirmation"><p id={`remove-${skill.id}`}>Remove “{skill.title}” from your portfolio?</p><button autoFocus className="danger-button" disabled={busy} aria-describedby={`remove-${skill.id}`} onClick={() => remove(skill)}>{busy ? 'Removing…' : 'Yes, remove'}</button><button disabled={busy} onClick={() => { setRemoving(null); requestAnimationFrame(() => document.getElementById(`remove-button-${skill.id}`)?.focus()) }}>Keep skill</button></div> : <><button disabled={busy} aria-label={`Edit ${skill.title}`} onClick={event => openEditor(skill, event.currentTarget)}><CommunityIcon name="edit" />Edit</button><button id={`remove-button-${skill.id}`} className="text-button" disabled={busy} aria-label={`Remove ${skill.title}`} onClick={() => { setRemoving(skill.id); setMessage('') }}><CommunityIcon name="remove" />Remove</button></>}
+            {removing === skill.id ? <div className="remove-confirmation"><p id={`remove-${skill.id}`}>Remove “{skill.title}” from your portfolio?</p><p>Existing exchanges and history will be preserved.</p><button autoFocus className="danger-button" disabled={busy} aria-describedby={`remove-${skill.id}`} onClick={() => remove(skill)}>{busy ? 'Removing…' : 'Yes, remove'}</button><button disabled={busy} onClick={() => { setRemoving(null); requestAnimationFrame(() => document.getElementById(`remove-button-${skill.id}`)?.focus()) }}>Keep skill</button></div> : <><button disabled={busy} aria-label={`Edit ${skill.title}`} onClick={event => openEditor(skill, event.currentTarget)}><CommunityIcon name="edit" />Edit</button><button id={`remove-button-${skill.id}`} className="text-button" disabled={busy} aria-label={`Remove ${skill.title}`} onClick={() => { setRemoving(skill.id); setMessage('') }}><CommunityIcon name="remove" />Remove</button></>}
           </SkillCard>)}</div> : <div className="panel empty-state"><span className="empty-icon" aria-hidden="true">✦</span><h3>You know something worth sharing</h3><p>From baking to coding, every skill has a place here.<br />Add your first listing to get started.</p><button className="primary-button" disabled={busy} onClick={event => openEditor(null, event.currentTarget)}>Add your first skill</button></div>}
         </section>
       </>}
